@@ -1,16 +1,16 @@
-Ottima decisione! Usare un virtual environment (ambiente virtuale) ti aiuta a isolare le dipendenze del progetto e a evitare conflitti come quello che hai appena risolto.
+Usare un virtual environment (ambiente virtuale) ti aiuta a isolare le dipendenze del progetto e a evitare conflitti con ciÃ² che hai installato nel tuo SO.
 Ecco i passaggi per creare e usare un virtual environment su Windows:
 
-? 1. Spostati nella cartella del tuo microservizio auth_service
+? 1. Spostati nella cartella del tuo microservizio (auth_service in questo caso)
 Apri il terminale (PowerShell o CMD) e digita:
 cd percorso\della\tua\cartella\auth_service
 (es. cd C:\Users\Tuonome\Documents\quizapp\auth_service)
 
-? 2. Crea l’ambiente virtuale
+? 2. Crea lâ€™ambiente virtuale
 python -m venv venv
-Questo comando crea una cartella venv/ nella tua directory, contenente l’ambiente virtuale.
+Questo comando crea una cartella venv/ nella tua directory, contenente lâ€™ambiente virtuale.
 
-? 3. Attiva l’ambiente virtuale
+? 3. Attiva lâ€™ambiente virtuale
 Se stai usando PowerShell:
 .\venv\Scripts\Activate.ps1
 Se ricevi un errore tipo "execution of scripts is disabled", lancia prima:
@@ -19,18 +19,17 @@ Se usi cmd.exe:
 venv\Scripts\activate.bat
 
 ? 4. Installa le dipendenze necessarie
-Puoi ora installare FastAPI, SQLAlchemy, ecc. dentro l’ambiente virtuale:
+Puoi ora installare FastAPI, SQLAlchemy, ecc. dentro lâ€™ambiente virtuale:
 pip install fastapi uvicorn sqlalchemy pymysql python-dotenv
 Se ti servono anche strumenti per lo sviluppo (es. httpx, pytest, ecc.), puoi installarli dopo.
 
-? 5. (Opzionale) Congela le dipendenze in un requirements.txt
-Così in futuro potrai installarle tutte insieme:
-pip freeze > requirements.txt
-E in un nuovo ambiente potrai fare:
+Oppure, se le hai scritte in un requirements.txt puoi fare:
 pip install -r requirements.txt
 
-Quando hai finito di lavorare, disattiva l’ambiente virtuale con:
-deactivate
+Per modificare in automatico il file requirements con le dipendenze installate:
+pip freeze > requirements.txt
 
-Fammi sapere se vuoi che ti scriva uno script .bat per fare tutto automaticamente o se vuoi configurare anche il .env!
+
+Quando hai finito di lavorare, disattiva lâ€™ambiente virtuale con:
+deactivate.
 
