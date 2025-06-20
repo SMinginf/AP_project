@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\signo\\Desktop\\progetto Ap- Quiz Multigiocatore\\QuizClient\\QuizClient\\QuizClient.csproj": {}
+    "C:\\Users\\signo\\Desktop\\progetto_AP\\QuizClient\\QuizClient\\QuizClient.csproj": {}
   },
   "projects": {
-    "C:\\Users\\signo\\Desktop\\progetto Ap- Quiz Multigiocatore\\QuizClient\\QuizClient\\QuizClient.csproj": {
+    "C:\\Users\\signo\\Desktop\\progetto_AP\\QuizClient\\QuizClient\\QuizClient.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\signo\\Desktop\\progetto Ap- Quiz Multigiocatore\\QuizClient\\QuizClient\\QuizClient.csproj",
+        "projectUniqueName": "C:\\Users\\signo\\Desktop\\progetto_AP\\QuizClient\\QuizClient\\QuizClient.csproj",
         "projectName": "QuizClient",
-        "projectPath": "C:\\Users\\signo\\Desktop\\progetto Ap- Quiz Multigiocatore\\QuizClient\\QuizClient\\QuizClient.csproj",
+        "projectPath": "C:\\Users\\signo\\Desktop\\progetto_AP\\QuizClient\\QuizClient\\QuizClient.csproj",
         "packagesPath": "C:\\Users\\signo\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\signo\\Desktop\\progetto Ap- Quiz Multigiocatore\\QuizClient\\QuizClient\\obj\\",
+        "outputPath": "C:\\Users\\signo\\Desktop\\progetto_AP\\QuizClient\\QuizClient\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
