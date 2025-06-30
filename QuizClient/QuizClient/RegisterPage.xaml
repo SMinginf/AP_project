@@ -1,0 +1,50 @@
+﻿<Page x:Class="QuizClient.RegisterPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="RegisterPage">
+    <Grid Background="#F0F0F0">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="40">
+                <TextBlock Text="Registrazione" FontSize="24" Margin="0,0,0,20" />
+
+        
+                <Label Content="Ruolo"/>
+                <ComboBox x:Name="RoleComboBox" SelectedIndex="0">
+                    <ComboBoxItem Content="Studente"/>
+                    <ComboBoxItem Content="Docente"/>
+                </ComboBox>
+                
+                <Label Content="Username" />
+                <TextBox x:Name="NicknameBox" Margin="0,0,0,10" />
+
+                <Label Content="Email" />
+                <TextBox x:Name="EmailBox" Margin="0,0,0,10" />
+
+                <Label Content="Nome" />
+                <TextBox x:Name="NameBox" Margin="0,0,0,10" />
+
+                <Label Content="Cognome" />
+                <TextBox x:Name="SurnameBox" Margin="0,0,0,10" />
+
+                <Label Content="Data di nascita" />
+                <DatePicker x:Name="BirthDatePicker" Margin="0,0,0,10" />
+
+                <Label Content="Genere" />
+                <ComboBox x:Name="GenderComboBox" Margin="0,0,0,10">
+                    <ComboBoxItem Content="Uomo" />
+                    <ComboBoxItem Content="Donna" />
+                    <ComboBoxItem Content="Altro" />
+                </ComboBox>
+
+                <Label Content="Password" />
+                <PasswordBox x:Name="PasswordBox" Margin="0,0,0,10" />
+
+                <Label Content="Conferma Password" />
+                <PasswordBox x:Name="ConfirmPasswordBox" Margin="0,0,0,20" />
+
+                <Button Content="Registrati" Click="RegisterUser_ClickAsync" Height="40" />
+                <Button Content="Indietro" Click="BackToLogin_Click" Height="40" Margin="0,10,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>
