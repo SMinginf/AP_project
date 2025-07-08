@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Data;
 using System.Globalization;
+using QuizClient.Utils;
 
 namespace QuizClient
 {
@@ -18,7 +19,7 @@ namespace QuizClient
         private List<Categoria> _categorieSelezionate = new List<Categoria>();
         private bool _unione = false; // Indica se le categorie selezionate devono essere unite o intersecate
 
-        private readonly QuizService _sessionService;
+        private readonly QuizService _quizService;
 
 
         public CreateQuizPage(Frame mainFrame, string jwtToken)
@@ -26,7 +27,7 @@ namespace QuizClient
             InitializeComponent();
             _mainFrame = mainFrame;
             _jwtToken = jwtToken;
-            _sessionService = new QuizService(jwtToken);
+            _quizService = new QuizService(jwtToken);
             
         }
 
@@ -34,9 +35,6 @@ namespace QuizClient
         {
             try
             {
-                // Estrai la lista degli ID delle categorie selezionate
-                // L’espressione di raccolta [.. sequence] in C# 12 (e .NET 8) è una collection expression.
-                // Serve per creare una nuova collezione (ad esempio una List<T>, un array, ecc.) a partire da un’altra sequenza.
                 List<int> idCategorieSelezionate = [.. _categorieSelezionate
                     .Where(c => c != null)
                     .Select(c => (int)c.ID)];
@@ -46,9 +44,7 @@ namespace QuizClient
                 bool aiGenerated = AIGeneratedYes.IsChecked == true;
                 string aiCategoria = aiGenerated ? AICategoryText.Text : string.Empty;
 
-                
-
-                Quiz? nuovoQuiz = await _sessionService.CreateQuizAsync(
+                ServiceResult<Quiz> result = await _quizService.CreateQuizAsync(
                     aiGenerated,
                     aiCategoria,
                     idCategorieSelezionate,
@@ -57,19 +53,19 @@ namespace QuizClient
                     quantita
                 );
 
-                if (nuovoQuiz != null)
+                if (result != null && result.Success && result.Data != null)
                 {
-                    MessageBox.Show("Quiz creato con successo !");
-                    _mainFrame.Navigate(new QuizPage(nuovoQuiz));
+                    MessageBox.Show("Quiz creato con successo!");
+                    _mainFrame.Navigate(new QuizPage(result.Data));
                 }
                 else
                 {
-                    MessageBox.Show("Errore nella creazione della sessione.");
+                    MessageBox.Show(result?.ErrorMessage ?? "Errore nella creazione del quiz.", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Errore: {ex.Message}");
+                MessageBox.Show($"Errore: {ex.Message}", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

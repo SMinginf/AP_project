@@ -113,7 +113,7 @@ namespace QuizClient.Models
         public bool Pubblica { get; set; }
 
         [JsonPropertyName("docente")]
-        public Utente Docente { get; set; } = new Utente();
+        public Utente? Docente { get; set; }
 
         [JsonPropertyName("quesiti")]
         public List<Quesito>? Quesiti { get; set; }
