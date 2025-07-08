@@ -76,6 +76,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			// Salviamo l'ID utente (che di solito è nel campo "sub" del token)
 			// nel contesto `c`, così sarà accessibile dagli handler successivi
 			c.Set("user_id", claims["sub"])
+			c.Set("ruolo", claims["ruolo"]) // Salva anche il ruolo dell'utente
 		}
 
 		// Passa la richiesta all'handler successivo

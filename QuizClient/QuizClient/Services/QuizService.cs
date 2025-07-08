@@ -28,11 +28,8 @@ namespace QuizClient.Services
         }
 
         // Crea quiz
-        public async Task<Quiz?> CreateQuizAsync(bool AIg, string AIcat, List<int> id_cat, bool u, string diff, int nd)
+        public async Task<ServiceResult<Quiz>> CreateQuizAsync(bool AIg, string AIcat, List<int> id_cat, bool u, string diff, int nd)
         {
-            //int? userId = JwtUtils.GetClaimAsInt(_jwtToken, "user_id");
-            //string? username = JwtUtils.GetClaim(_jwtToken, "username");
-            
             var quiz_data = new
             {
                 ai_generated = AIg,
@@ -42,16 +39,35 @@ namespace QuizClient.Services
                 difficolta = diff,
                 quantita = nd,
             };
-            var response = await _client.PostAsJsonAsync("/quiz/create", quiz_data);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                return await response.Content.ReadFromJsonAsync<Quiz>();
+                var response = await _client.PostAsJsonAsync("/quiz/create", quiz_data);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<Quiz>();
+                    return new ServiceResult<Quiz> { Data = data };
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    string? errorMsg = $"Errore HTTP {response.StatusCode}";
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(error);
+                        if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                            errorMsg = errorProp.GetString() ?? errorMsg;
+                    }
+                    catch { }
+                    return new ServiceResult<Quiz> { ErrorMessage = errorMsg };
+                }
             }
-            else
+            catch (HttpRequestException ex)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Errore nella creazione del quiz: {error}");
-                return null;
+                return new ServiceResult<Quiz> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<Quiz> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
             }
         }
 

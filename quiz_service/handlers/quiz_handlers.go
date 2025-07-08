@@ -29,9 +29,9 @@ func CreateQuiz(c *gin.Context) {
 	var quiz *models.CreateQuizOutput
 	var err error
 
-	if input.AIGenerated {
+	if input.AIGenerated { // --- TEST GENERATO CON AI ---
 		if input.AICategoria == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Devi specificare almeno una categoria"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Devi specificare una categoria"})
 			return
 		}
 		quiz, err = utils.GenerateAIQuiz(input.AICategoria, input.Difficolta, input.Quantita)
@@ -40,7 +40,7 @@ func CreateQuiz(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-	} else {
+	} else { // --- TEST GENERATO MANUALMENTE ---
 		if len(input.IdCategorie) == 0 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Devi specificare almeno una categoria"})
 			return
@@ -60,13 +60,13 @@ func CreateQuiz(c *gin.Context) {
 		var quesiti []models.Quesito
 		var query *gorm.DB
 		if input.Unione {
-			// Unione: almeno una delle categorie
+			// Unione: quesiti che abbiano almeno una delle categorie
 			query = database.DB.
 				Joins("JOIN categoria_quesito cq ON cq.id_quesito = quesiti.id").
 				Where("cq.id_categoria IN ?", input.IdCategorie)
 
 		} else {
-			// Intersezione: tutte le categorie
+			// Intersezione: quesiti che appartengano a tutte le categorie
 			subQuery := database.DB.
 				Table("categoria_quesito").
 				Select("id_quesito").
@@ -81,7 +81,7 @@ func CreateQuiz(c *gin.Context) {
 		if input.Difficolta != "Qualsiasi" {
 			query = query.Where("quesiti.difficolta = ?", input.Difficolta)
 		}
-		// Eseguo la query per ottenere le domande
+		// Eseguo la query per ottenere un insieme randomico di  quelle domande
 		err = query.Order("RAND()").Limit(input.Quantita).Find(&quesiti).Error
 
 		if err != nil {
