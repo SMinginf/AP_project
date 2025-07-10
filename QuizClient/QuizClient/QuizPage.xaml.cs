@@ -1,29 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using QuizClient.Models;
+using QuizClient.Services;
+using QuizClient.Utils;
 
 namespace QuizClient
 {
     public partial class QuizPage : Page
     {
+        private DispatcherTimer? _timer;
+
         private readonly Quiz _quiz;
         private int _currentIndex = 0;
-        private readonly List<int?> _risposteUtente;
-        private DispatcherTimer? _timer;
         private int _secondsElapsed = 0;
+        private readonly List<int?> _risposteUtente;
+        
+        private string OrarioCreazione { get; set; }
+        
+        private readonly QuizService _quizService;
+        private readonly string _jwtToken;
 
-        public QuizPage(Quiz quiz)
+        public QuizPage(Quiz quiz, string jwt)
         {
             InitializeComponent();
-            _quiz = quiz;
-            // Fix for CS0029: Change the initialization of _risposteUtente to use a List<int?> instead of an array.
-            _risposteUtente = new List<int?>(new int?[quiz.Quesiti.Count]);
-           
+            _jwtToken = jwt;
+            _quizService = new QuizService(_jwtToken);
+            
+            
+            _quiz = quiz;            
+            _risposteUtente = new List<int?>(new int?[quiz.Quesiti.Count]);    
             QuizTitleText.Text = quiz.Titolo;
+
+            OrarioCreazione = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
             StartTimer();
             MostraQuesito();
         }
@@ -146,20 +160,47 @@ namespace QuizClient
             }
         }
 
-        private void EndQuiz_Click(object sender, RoutedEventArgs e)
+        private async void EndQuiz_Click(object sender, RoutedEventArgs e)
         {
             _timer?.Stop();
+            var ts = TimeSpan.FromSeconds(_secondsElapsed);
+            string durata = ts.ToString(@"hh\:mm\:ss");
+
             int corrette = 0;
+            int sbagliate = 0;
             for (int i = 0; i < _quiz.Quesiti.Count; i++)
             {
-                // Ensure _risposteUtente[i] is not null before accessing Value
-                if (_risposteUtente != null && i < _risposteUtente.Count && _risposteUtente[i] is int risposta && risposta == _quiz.Quesiti[i].OpCorretta)
+                // Assicurati che _risposteUtente[i] non sia null prima di accedere al suo valore
+                if (_risposteUtente != null && i < _risposteUtente.Count && _risposteUtente[i] is int risposta )               
                 {
-                    corrette++;
+                    if (risposta == _quiz.Quesiti[i].OpCorretta)
+                        corrette++;
+                    else
+                        sbagliate++;
                 }
             }
-            MessageBox.Show($"Quiz terminato!\nRisposte corrette: {corrette} su {_quiz.Quesiti.Count}\nTempo: {_secondsElapsed} secondi");
-            // Navigazione o altre azioni
+
+            if (_quiz.AiGenerated) {
+                MessageBox.Show($"Quiz terminato!\nRisposte corrette: {corrette} su {_quiz.Quesiti.Count}\nTempo: {_secondsElapsed} secondi");
+                return;
+            }
+
+            var result = await _quizService.StoreQuizAsync(_quiz, corrette, sbagliate, OrarioCreazione, durata, _risposteUtente);
+            if (result != null && result.Success)
+            {
+                MessageBox.Show($"Quiz terminato!\nRisposte corrette: {corrette} su {_quiz.Quesiti.Count}\nTempo: {_secondsElapsed} secondi");
+
+                // Naviga alla pagina Lobby
+                //var lobbyPage = new LobbyPage(_jwtToken);
+                //NavigationService?.Navigate(lobbyPage);
+
+
+            }
+            else
+            {
+                MessageBox.Show(result?.ErrorMessage ?? "Errore nell'invio del quiz al server.", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
         }
 
         private void CancelQuiz_Click(object sender, RoutedEventArgs e)

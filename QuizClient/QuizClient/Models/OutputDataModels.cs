@@ -19,6 +19,9 @@ namespace QuizClient.Models
 
         [JsonPropertyName("quesiti")]
         public List<Quesito> Quesiti { get; set; } = new();
+        
+        [JsonPropertyName("AIGenerated")]
+        public bool AiGenerated { get; set; }
 
     }
 

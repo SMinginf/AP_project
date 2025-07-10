@@ -56,7 +56,7 @@ namespace QuizClient
                 if (result != null && result.Success && result.Data != null)
                 {
                     MessageBox.Show("Quiz creato con successo!");
-                    _mainFrame.Navigate(new QuizPage(result.Data));
+                    _mainFrame.Navigate(new QuizPage(result.Data, _jwtToken));
                 }
                 else
                 {

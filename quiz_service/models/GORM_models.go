@@ -66,3 +66,28 @@ type Categoria struct {
 func (Categoria) TableName() string {
 	return "categorie"
 }
+
+type Quiz struct {
+	ID                uint      `gorm:"primaryKey" json:"id"`
+	IDUtente          uint      `gorm:"column:id_utente;not null" json:"id_utente"`
+	Difficolta        string    `gorm:"type:enum('Facile','Intermedia','Difficile', 'Qualsiasi');default:Qualsiasi" json:"difficolta"`
+	Quantita          int       `gorm:"not null" json:"quantita"`
+	Durata            string    `gorm:"type:time;not null" json:"durata"`
+	Data              time.Time `gorm:"type:datetime;not null" json:"data"`
+	RisposteCorrette  int       `gorm:"not null" json:"risposte_corrette"`
+	RisposteSbagliate int       `gorm:"not null" json:"risposte_sbagliate"`
+}
+
+func (Quiz) TableName() string {
+	return "quiz"
+}
+
+type QuizQuesiti struct {
+	QuizID         uint `gorm:"column:quiz_id;primaryKey"`
+	QuesitoID      uint `gorm:"column:quesito_id;primaryKey"`
+	RispostaUtente int  `gorm:"column:risposta_utente"`
+}
+
+func (QuizQuesiti) TableName() string {
+	return "quiz_quesiti"
+}
