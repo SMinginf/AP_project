@@ -14,11 +14,11 @@ type CreateQuizInput struct {
 // Oggetto da cui farò il parse a json per restituire un quiz generato manualmente,
 // ovvero con quesiti prelevati dal database e non generati da AI.
 type CreateQuizOutput struct {
-	Titolo     string    `json:"titolo"`
-	Categoria  string    `json:"categoria"`
-	Difficolta string    `json:"difficolta"`
-	Quantita   int       `json:"quantita"`
-	Quesiti    []Quesito `json:"quesiti"`
+	AIGenerated bool      `json:"ai_generated"` // il tag Gin "required" per i booelani non funziona bene
+	Categoria   string    `json:"categoria"`
+	Difficolta  string    `json:"difficolta"`
+	Quantita    int       `json:"quantita"`
+	Quesiti     []Quesito `json:"quesiti"`
 }
 
 type GroqQuesito struct {
@@ -33,4 +33,17 @@ type GroqQuiz struct {
 	Categoria  string        `json:"categoria"`
 	Difficolta string        `json:"difficolta"`
 	Quesiti    []GroqQuesito `json:"quesiti"`
+}
+
+type StoreQuizInput struct {
+	Categoria         string `json:"categoria" binding:"required"`
+	Difficolta        string `json:"difficolta" binding:"required,oneof=Facile Intermedia Difficile Qualsiasi"`
+	Quantita          int    `json:"quantita" binding:"required,min=3"`
+	IdUtente          uint   `json:"id_utente" binding:"required"`
+	IdQuesiti         []uint `json:"id_quesiti" binding:"required"`
+	RisposteCorrette  int    `json:"corrette" binding:"required"`
+	RisposteSbagliate int    `json:"sbagliate" binding:"required"`
+	Durata            string `json:"durata" binding:"required"`
+	DataCreazione     string `json:"data_creazione" binding:"required"` // formato: "YYYY-MM-DD HH:MM:SS"
+	Risposte          []int  `json:"risposte_utente" binding:"required"`
 }

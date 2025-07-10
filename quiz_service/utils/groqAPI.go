@@ -125,7 +125,6 @@ Istruzioni specifiche per quesiti di matematica:
 
 	// Conversione da GroqQuesito a Quesito
 	quiz := &models.CreateQuizOutput{
-		Titolo:     groqQuiz.Titolo,
 		Categoria:  groqQuiz.Categoria,
 		Difficolta: groqQuiz.Difficolta,
 		Quantita:   len(groqQuiz.Quesiti),

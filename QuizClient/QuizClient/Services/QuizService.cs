@@ -71,82 +71,62 @@ namespace QuizClient.Services
             }
         }
 
-        /*
-        public async Task<Session[]?> GetSessionsAsync() { 
-            var response = await _client.GetAsync("/sessions/list");
-            if (response.IsSuccessStatusCode)
+        public async Task<ServiceResult<Quiz>> StoreQuizAsync(Quiz q, int corrette, int sbagliate, string data_creazione, string durata, List<int?> risposte_utente) { 
+
+            try
             {
-                return await response.Content.ReadFromJsonAsync<Session[]>() ?? Array.Empty<Session>();
+                // Prelevo l'id dll'utente dal token JWT
+                uint id_utente = JwtUtils.GetClaimAsUInt(_jwtToken, "user_id");
+
+                // Preparo la lista di id dei quesiti del quiz (non serve inviare al server l'oggetto Quesito completo, ma solo gli ID)
+                List<uint> id_quesiti = q.Quesiti.Select(quesito => quesito.ID).ToList();
+
+                // Creo l'oggetto da inviare al server
+                var quiz_data = new
+                {
+                    categoria = q.Categoria, //potrebbe essere inutile, potenzialmente cancellabile
+                    difficolta = q.Difficolta,
+                    quantita = q.Quantita,
+                    id_quesiti,
+                    id_utente,
+                    corrette,
+                    sbagliate,
+                    data_creazione,
+                    durata,
+                    risposte_utente
+
+                };
+
+
+                var response = await _client.PostAsJsonAsync("/quiz/store", quiz_data);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<Quiz>();
+                    return new ServiceResult<Quiz> { Data = data };
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    string? errorMsg = $"Errore HTTP {response.StatusCode}";
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(error);
+                        if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                            errorMsg = errorProp.GetString() ?? errorMsg;
+                    }
+                    catch { }
+                    return new ServiceResult<Quiz> { ErrorMessage = errorMsg };
+                }
             }
-            else
+            catch (HttpRequestException ex)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Errore nel recupero delle sessioni: {error}");
-                return null;
+                return new ServiceResult<Quiz> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<Quiz> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
             }
         }
-
-        public async Task<Session?> GetSessionAsync(string sessionId)
-        {
-            var response = await _client.GetAsync($"/sessions/{sessionId}");
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<Session>();
-            }
-            else
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Errore nel recupero della sessione: {error}");
-                return null;
-            }
-        }
-
-        public async Task<Session?> JoinSessionAsync(string sessionId)
-        {
-            int? userId = JwtUtils.GetClaimAsInt(_jwtToken, "user_id");
-            string? username = JwtUtils.GetClaim(_jwtToken, "username");
-            var join_data = new
-            {
-                session_id = sessionId,
-                player_id = userId,
-                player_username = username
-            };
-            var response = await _client.PostAsJsonAsync($"/sessions/join", join_data);
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<Session>();
-            }
-            else
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Errore nell'unirsi alla sessione: {error}");
-                return null;
-            }
-
-        }
-
-        public async Task<bool> LeaveSessionAsync(string sessionId)
-        {
-            int? userId = JwtUtils.GetClaimAsInt(_jwtToken, "user_id");
-            var leave_data = new
-            {
-                session_id = sessionId,
-                player_id = userId
-            };
-            var response = await _client.PostAsJsonAsync($"/sessions/leave", leave_data);
-            if (response.IsSuccessStatusCode)
-            {
-                return true;
-            }
-            else
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Errore nell'abbandonare la sessione: {error}");
-                return false;
-            }
-        }
-        
-        */
     }
  
 }

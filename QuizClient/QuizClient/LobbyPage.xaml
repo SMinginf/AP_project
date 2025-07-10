@@ -9,7 +9,7 @@
             <TextBlock Text="Benvenuto nella Lobby" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,30"/>
 
             <Button Content="Crea quiz" Width="200" Height="40" Click="CreateQuiz_Click"/>
-            <Button Content="Gestisci categorie" x:Name="GestisciCategorieButton" Width="200" Height="40" Click="ManageCategories_Click"/>
+            <Button Content="Gestisci categorie" x:Name="GestisciCategorieButton" Width="200" Height="40" Click="ManageCategories_Click" BorderThickness="1,1,1,1"/>
             <Button Content="Statistiche profilo" Width="200" Height="40" Click="ProfileStats_Click"/>
             <Button Content="Logout" Width="200" Height="40" Background="LightCoral" Click="Logout_Click"/>
         </StackPanel>

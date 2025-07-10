@@ -30,7 +30,7 @@ namespace QuizClient
 
         private async void CaricaCategorie()
         {
-            var result = await _CRUDService.GetCategorieByDocenteAsync();
+            var result = await _CRUDService.GetCategoriePubblicheAsync();
             if (result.Success && result.Data != null)
             {
                 _tutteLeCategorie = result.Data;

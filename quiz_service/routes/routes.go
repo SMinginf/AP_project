@@ -16,6 +16,8 @@ func SetupRoutes(router *gin.Engine) {
 		// POST /sessions/create → Crea una nuova sessione
 		sessionRoutes.POST("/create", handlers.CreateQuiz)
 
+		sessionRoutes.POST("/store", handlers.StoreQuiz)
+
 		// POST /sessions/join → Partecipa a una sessione esistente
 		//sessionRoutes.POST("/join", handlers.JoinSession)
 

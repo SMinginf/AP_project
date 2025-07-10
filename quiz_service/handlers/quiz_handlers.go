@@ -6,6 +6,7 @@ import (
 	"AP_project/quiz_service/utils"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -97,13 +98,69 @@ func CreateQuiz(c *gin.Context) {
 			return
 		}
 		quiz = &models.CreateQuizOutput{
-			Categoria:  fmt.Sprintf("%v", input.IdCategorie),
-			Difficolta: input.Difficolta,
-			Quantita:   input.Quantita,
-			Quesiti:    quesiti,
+			AIGenerated: input.AIGenerated,
+			Categoria:   fmt.Sprintf("%v", input.IdCategorie),
+			Difficolta:  input.Difficolta,
+			Quantita:    input.Quantita,
+			Quesiti:     quesiti,
 		}
 	}
 
 	fmt.Printf("Quiz generato: %+v\n", quiz)
 	c.JSON(http.StatusCreated, quiz)
+}
+
+func StoreQuiz(c *gin.Context) {
+
+	var input models.StoreQuizInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		fmt.Println("Errore:", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var quesiti []models.Quesito
+	if err := database.DB.Where("id IN ?", input.IdQuesiti).Find(&quesiti).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nel recupero dei quesiti"})
+		return
+	}
+
+	data, err := time.Parse("2006-01-02 15:04:05", input.DataCreazione)
+	if err != nil {
+		// gestisci errore di parsing
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Formato data non valido. Usa 'YYYY-MM-DD HH:MM:SS'"})
+		return
+	}
+
+	quiz := models.Quiz{
+		IDUtente:          input.IdUtente,
+		Difficolta:        input.Difficolta,
+		Quantita:          input.Quantita,
+		Durata:            input.Durata,
+		Data:              data,
+		RisposteCorrette:  input.RisposteCorrette,
+		RisposteSbagliate: input.RisposteSbagliate,
+	}
+
+	if err := database.DB.Create(&quiz).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nella memorizzazione del quiz"})
+		return
+	}
+
+	// Inserisco le relazioni tra quiz e quesiti nella tabella di join
+	for i, quesito := range quesiti {
+		quizQuesito := models.QuizQuesiti{
+			QuizID:         quiz.ID,
+			QuesitoID:      quesito.ID,
+			RispostaUtente: input.Risposte[i],
+		}
+
+		if err := database.DB.Create(&quizQuesito).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nella memorizzazione della relazione quiz-quesito"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Quiz creato con successo", "quiz_id": quiz.ID})
+
 }
