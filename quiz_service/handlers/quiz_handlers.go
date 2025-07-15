@@ -99,7 +99,6 @@ func CreateQuiz(c *gin.Context) {
 		}
 		quiz = &models.CreateQuizOutput{
 			AIGenerated: input.AIGenerated,
-			Categoria:   fmt.Sprintf("%v", input.IdCategorie),
 			Difficolta:  input.Difficolta,
 			Quantita:    input.Quantita,
 			Quesiti:     quesiti,

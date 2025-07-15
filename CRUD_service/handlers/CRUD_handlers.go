@@ -54,7 +54,14 @@ func UpdateCategoria(c *gin.Context) {
 		return
 	}
 
-	if err := database.DB.Model(&models.Categoria{}).Where("id = ?", categoria.ID).Updates(categoria).Error; err != nil {
+	/*
+		GORM per default ignora i campi con valore zero (incluso false per i boolean)
+		quando usa il metodo Updates(). Questo è un comportamento standard di GORM per
+		evitare di sovrascrivere valori esistenti con valori zero non intenzionali.
+		Usando il select possiamo esplicitamente specificare quali campi vogliamo aggiornare.
+	*/
+
+	if err := database.DB.Model(&models.Categoria{}).Where("id = ?", categoria.ID).Select("nome", "tipo", "descrizione", "pubblica", "id_docente").Updates(categoria).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nella modifica della categoria"})
 		return
 	}
