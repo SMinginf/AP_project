@@ -171,7 +171,7 @@ namespace QuizClient
             for (int i = 0; i < _quiz.Quesiti.Count; i++)
             {
                 // Assicurati che _risposteUtente[i] non sia null prima di accedere al suo valore
-                if (_risposteUtente != null && i < _risposteUtente.Count && _risposteUtente[i] is int risposta )               
+                if (_risposteUtente != null && i < _risposteUtente.Count && _risposteUtente[i] is int risposta)
                 {
                     if (risposta == _quiz.Quesiti[i].OpCorretta)
                         corrette++;
@@ -180,10 +180,18 @@ namespace QuizClient
                 }
             }
 
-            if (_quiz.AiGenerated) {
-                MessageBox.Show($"Quiz terminato!\nRisposte corrette: {corrette} su {_quiz.Quesiti.Count}\nTempo: {_secondsElapsed} secondi");
+            if (_risposteUtente == null)
+            {
+                MessageBox.Show("Errore: le risposte utente non sono state inizializzate.", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
+
+            /*
+            if (_quiz.AiGenerated)
+            {
+                MessageBox.Show($"Quiz terminato!\nRisposte corrette: {corrette} su {_quiz.Quesiti.Count}\nTempo: {_secondsElapsed} secondi");
+                return;
+            } */
 
             var result = await _quizService.StoreQuizAsync(_quiz, corrette, sbagliate, OrarioCreazione, durata, _risposteUtente);
             if (result != null && result.Success)
@@ -193,14 +201,11 @@ namespace QuizClient
                 // Naviga alla pagina Lobby
                 //var lobbyPage = new LobbyPage(_jwtToken);
                 //NavigationService?.Navigate(lobbyPage);
-
-
             }
             else
             {
                 MessageBox.Show(result?.ErrorMessage ?? "Errore nell'invio del quiz al server.", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
         }
 
         private void CancelQuiz_Click(object sender, RoutedEventArgs e)

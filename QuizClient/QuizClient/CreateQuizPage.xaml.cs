@@ -42,7 +42,7 @@ namespace QuizClient
                 int quantita = int.TryParse(NumQuestionsBox.Text, out int q) ? q : 0;
                 string difficolta = ((ComboBoxItem)DifficultyBox.SelectedItem)?.Content.ToString() ?? "Qualsiasi";
                 bool aiGenerated = AIGeneratedYes.IsChecked == true;
-                string aiCategoria = aiGenerated ? AICategoryText.Text : string.Empty;
+                string aiCategoria = aiGenerated ? AICategoryBox.Text : string.Empty;
 
                 ServiceResult<Quiz> result = await _quizService.CreateQuizAsync(
                     aiGenerated,

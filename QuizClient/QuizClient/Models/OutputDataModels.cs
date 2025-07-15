@@ -8,8 +8,6 @@ namespace QuizClient.Models
         [JsonPropertyName("titolo")]
         public string Titolo { get; set; } = "";
 
-        [JsonPropertyName("categoria")]
-        public string Categoria { get; set; } = "";
         
         [JsonPropertyName("difficolta")]
         public string Difficolta { get; set; } = "";
@@ -20,9 +18,10 @@ namespace QuizClient.Models
         [JsonPropertyName("quesiti")]
         public List<Quesito> Quesiti { get; set; } = new();
         
-        [JsonPropertyName("AIGenerated")]
+        
+        [JsonPropertyName("ai_generated")]
         public bool AiGenerated { get; set; }
-
+        
     }
 
     public class Quesito

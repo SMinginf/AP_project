@@ -84,7 +84,6 @@ namespace QuizClient.Services
                 // Creo l'oggetto da inviare al server
                 var quiz_data = new
                 {
-                    categoria = q.Categoria, //potrebbe essere inutile, potenzialmente cancellabile
                     difficolta = q.Difficolta,
                     quantita = q.Quantita,
                     id_quesiti,

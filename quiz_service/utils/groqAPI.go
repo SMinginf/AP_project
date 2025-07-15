@@ -10,7 +10,7 @@ import (
 	"AP_project/quiz_service/models"
 )
 
-const GROQ_API_KEY = "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"
+const GROQ_API_KEY = ""
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
 
 func GenerateAIQuiz(categoria string, difficolta string, nd int) (*models.CreateQuizOutput, error) {
@@ -125,10 +125,11 @@ Istruzioni specifiche per quesiti di matematica:
 
 	// Conversione da GroqQuesito a Quesito
 	quiz := &models.CreateQuizOutput{
-		Categoria:  groqQuiz.Categoria,
-		Difficolta: groqQuiz.Difficolta,
-		Quantita:   len(groqQuiz.Quesiti),
-		Quesiti:    make([]models.Quesito, 0, len(groqQuiz.Quesiti)),
+		AIGenerated: true,
+		AICategoria: groqQuiz.Categoria,
+		Difficolta:  groqQuiz.Difficolta,
+		Quantita:    len(groqQuiz.Quesiti),
+		Quesiti:     make([]models.Quesito, 0, len(groqQuiz.Quesiti)),
 	}
 
 	for _, gq := range groqQuiz.Quesiti {

@@ -15,7 +15,7 @@ type CreateQuizInput struct {
 // ovvero con quesiti prelevati dal database e non generati da AI.
 type CreateQuizOutput struct {
 	AIGenerated bool      `json:"ai_generated"` // il tag Gin "required" per i booelani non funziona bene
-	Categoria   string    `json:"categoria"`
+	AICategoria string    `json:"ai_categoria"` // categoria da cui generare il quiz con AI
 	Difficolta  string    `json:"difficolta"`
 	Quantita    int       `json:"quantita"`
 	Quesiti     []Quesito `json:"quesiti"`
@@ -36,7 +36,6 @@ type GroqQuiz struct {
 }
 
 type StoreQuizInput struct {
-	Categoria         string `json:"categoria" binding:"required"`
 	Difficolta        string `json:"difficolta" binding:"required,oneof=Facile Intermedia Difficile Qualsiasi"`
 	Quantita          int    `json:"quantita" binding:"required,min=3"`
 	IdUtente          uint   `json:"id_utente" binding:"required"`
