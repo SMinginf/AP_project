@@ -14,4 +14,4 @@ obj/
 Thumbs.db
 
 # Python virtual environment
-venv/
+auth_service/venv

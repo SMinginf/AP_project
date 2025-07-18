@@ -16,7 +16,6 @@ class UserCreate(BaseModel):
     data_nascita: date
     genere: str
     password: str
-    ruolo: str
 
 # Schema per login
 class UserLogin(BaseModel):
