@@ -4,6 +4,7 @@ import enum
 
 Base = declarative_base()
 
+# Enum di difficoltà
 class DifficoltaEnum(enum.Enum):
     Facile = "Facile"
     Intermedia = "Intermedia"
@@ -11,10 +12,13 @@ class DifficoltaEnum(enum.Enum):
     Qualsiasi = "Qualsiasi"
     Nessuna = ""  # solo per compatibilità
 
+
 class RuoloEnum(enum.Enum):
     Studente = "Studente"
     Docente = "Docente"
 
+
+# Modelli SQLAlchemy
 class Utente(Base):
     __tablename__ = "utenti"
 
@@ -26,11 +30,14 @@ class Utente(Base):
     password = Column(String(255), nullable=False)
     data_nascita = Column(Date, nullable=False)
     genere = Column(String(45), nullable=False)
-    ruolo = Column(Enum(RuoloEnum), default=RuoloEnum.Studente, nullable=False)
+    
+    # Usa String per memorizzare i valori dell'Enum come stringa
+    ruolo = Column(String(20), default=RuoloEnum.Studente.value, nullable=False)
 
     quiz_svolti = relationship("Quiz", back_populates="studente")
     categorie_create = relationship("Categoria", back_populates="docente")
     quesiti_creati = relationship("Quesito", back_populates="docente")
+
 
 class Categoria(Base):
     __tablename__ = "categorie"
@@ -45,11 +52,13 @@ class Categoria(Base):
     docente = relationship("Utente", back_populates="categorie_create")
     quesiti = relationship("CategoriaQuesito", back_populates="categoria", cascade="all, delete-orphan")
 
+
 class Quesito(Base):
     __tablename__ = "quesiti"
 
     id = Column(Integer, primary_key=True)
-    difficolta = Column(Enum(DifficoltaEnum), nullable=True)
+    # Usa String per memorizzare i valori dell'Enum come stringa
+    difficolta = Column(String(20), nullable=True)  # Usa una stringa per la difficoltà
     testo = Column(Text, nullable=False)
     opzione_a = Column(String(255), nullable=False)
     opzione_b = Column(String(255), nullable=False)
@@ -62,6 +71,7 @@ class Quesito(Base):
     categorie = relationship("CategoriaQuesito", back_populates="quesito", cascade="all, delete-orphan")
     risposte_date = relationship("QuizQuesito", back_populates="quesito")
 
+
 class CategoriaQuesito(Base):
     __tablename__ = "categoria_quesito"
 
@@ -71,12 +81,14 @@ class CategoriaQuesito(Base):
     categoria = relationship("Categoria", back_populates="quesiti")
     quesito = relationship("Quesito", back_populates="categorie")
 
+
 class Quiz(Base):
     __tablename__ = "quiz"
 
     id = Column(Integer, primary_key=True)
     id_utente = Column(Integer, ForeignKey("utenti.id"), nullable=False)
-    difficolta = Column(Enum(DifficoltaEnum), default=DifficoltaEnum.Qualsiasi, nullable=False)
+    # Usa String per memorizzare i valori dell'Enum come stringa
+    difficolta = Column(String(20), default=DifficoltaEnum.Qualsiasi.value, nullable=False)
     quantita = Column(Integer, nullable=False)
     durata = Column(Time, nullable=False)
     data = Column(DateTime, nullable=False)
@@ -85,6 +97,7 @@ class Quiz(Base):
 
     studente = relationship("Utente", back_populates="quiz_svolti")
     domande = relationship("QuizQuesito", back_populates="quiz", cascade="all, delete-orphan")
+
 
 class QuizQuesito(Base):
     __tablename__ = "quiz_quesiti"
