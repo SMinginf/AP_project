@@ -92,3 +92,143 @@ def get_student_stats(student_id: int, db: Session = Depends(get_db)):
         "stats_per_categoria_difficolta": stats,
         "andamento_temporale": timeline
     }
+
+
+# ----------------------------
+# Endpoint: Statistiche per Docenti
+# ----------------------------
+@routes_group.get("/teacher/{teacher_id}", summary="Statistiche docente")
+def get_teacher_stats(teacher_id: int, db: Session = Depends(get_db)):
+    """Restituisce statistiche sui quesiti creati dal docente.
+
+    Le informazioni sono calcolate aggregando le risposte che gli studenti
+    hanno fornito nei quiz che includevano tali quesiti. I docenti non
+    creano quiz, quindi l'analisi riguarda esclusivamente i quesiti.
+    """
+
+    # Verifica che il docente esista
+    docente = db.query(Utente).filter(Utente.id == teacher_id).first()
+    if not docente:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Docente con ID {teacher_id} non trovato.",
+        )
+
+    # Recupera tutte le risposte ai quesiti creati dal docente
+    records = (
+        db.query(
+            Quiz.id_utente.label("studente_id"),
+            Quiz.data.label("data_quiz"),
+            QuizQuesiti.quesito_id,
+            QuizQuesiti.risposta_utente,
+            Quesito.difficolta,
+            Quesito.op_corretta,
+            Quesito.testo.label("quesito_testo"),
+            Categoria.id.label("categoria_id"),
+            Categoria.nome.label("categoria_nome"),
+        )
+        .join(QuizQuesiti, Quiz.id == QuizQuesiti.quiz_id)
+        .join(Quesito, QuizQuesiti.quesito_id == Quesito.id)
+        .join(CategoriaQuesito, CategoriaQuesito.id_quesito == Quesito.id)
+        .join(Categoria, Categoria.id == CategoriaQuesito.id_categoria)
+        .filter(Quesito.id_docente == teacher_id)
+        .all()
+    )
+
+    if not records:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Nessuna risposta trovata per i quesiti di questo docente.",
+        )
+
+    # Costruzione DataFrame dal risultato della query
+    df = pd.DataFrame(records)
+
+    # Calcolo indicatori binari per ogni risposta
+    df["corretta"] = (df["risposta_utente"] == df["op_corretta"]).astype(int)
+    df["sbagliata"] = (
+        (df["risposta_utente"].notnull()) & (df["risposta_utente"] != df["op_corretta"])
+    ).astype(int)
+    df["non_data"] = df["risposta_utente"].isnull().astype(int)
+
+    # Statistiche aggregate per difficoltà complessiva
+    diff_grouped = (
+        df.groupby("difficolta")
+        .agg(
+            corrette=("corretta", "sum"),
+            sbagliate=("sbagliata", "sum"),
+            non_date=("non_data", "sum"),
+            tot_risposte=("corretta", "count"),
+            quesiti_unici=("quesito_id", "nunique"),
+        )
+        .reset_index()
+    )
+
+    # Percentuali di correttezza per livello di difficoltà
+    diff_grouped["perc_corrette"] = (diff_grouped["corrette"] / diff_grouped["tot_risposte"]).fillna(0).round(2)
+    diff_grouped["perc_sbagliate"] = (diff_grouped["sbagliate"] / diff_grouped["tot_risposte"]).fillna(0).round(2)
+    diff_grouped["perc_non_date"] = (diff_grouped["non_date"] / diff_grouped["tot_risposte"]).fillna(0).round(2)
+
+    # Statistiche aggregate per categoria e difficoltà
+    cat_grouped = (
+        df.groupby(["categoria_nome", "difficolta"])
+        .agg(
+            corrette=("corretta", "sum"),
+            sbagliate=("sbagliata", "sum"),
+            non_date=("non_data", "sum"),
+            tot_risposte=("corretta", "count"),
+            studenti_unici=("studente_id", "nunique"),
+        )
+        .reset_index()
+    )
+
+    # Percentuali per categoria e difficoltà
+    cat_grouped["perc_corrette"] = (cat_grouped["corrette"] / cat_grouped["tot_risposte"]).fillna(0).round(2)
+    cat_grouped["perc_sbagliate"] = (cat_grouped["sbagliate"] / cat_grouped["tot_risposte"]).fillna(0).round(2)
+    cat_grouped["perc_non_date"] = (cat_grouped["non_date"] / cat_grouped["tot_risposte"]).fillna(0).round(2)
+
+    # Statistiche aggregate per singolo quesito
+    quesiti_grouped = (
+        df.groupby(["quesito_id", "quesito_testo", "difficolta"])
+        .agg(
+            corrette=("corretta", "sum"),
+            sbagliate=("sbagliata", "sum"),
+            non_date=("non_data", "sum"),
+            tot_risposte=("corretta", "count"),
+            studenti_unici=("studente_id", "nunique"),
+        )
+        .reset_index()
+    )
+
+    # Percentuali di esito per singola domanda
+    quesiti_grouped["perc_corrette"] = (quesiti_grouped["corrette"] / quesiti_grouped["tot_risposte"]).fillna(0).round(2)
+    quesiti_grouped["perc_sbagliate"] = (quesiti_grouped["sbagliate"] / quesiti_grouped["tot_risposte"]).fillna(0).round(2)
+    quesiti_grouped["perc_non_date"] = (quesiti_grouped["non_date"] / quesiti_grouped["tot_risposte"]).fillna(0).round(2)
+
+    # Statistiche per ogni studente che ha risposto ai quesiti del docente
+    student_grouped = (
+        df.groupby("studente_id")
+        .agg(
+            corrette=("corretta", "sum"),
+            sbagliate=("sbagliata", "sum"),
+            non_date=("non_data", "sum"),
+            tot_risposte=("corretta", "count"),
+        )
+        .reset_index()
+    )
+    student_grouped["perc_corrette"] = (student_grouped["corrette"] / student_grouped["tot_risposte"]).fillna(0).round(2)
+    student_grouped["perc_sbagliate"] = (student_grouped["sbagliate"] / student_grouped["tot_risposte"]).fillna(0).round(2)
+    student_grouped["perc_non_date"] = (student_grouped["non_date"] / student_grouped["tot_risposte"]).fillna(0).round(2)
+
+    return {
+        "docente": {
+            "id": docente.id,
+            "username": docente.username,
+            "nome": docente.nome,
+            "cognome": docente.cognome,
+        },
+        "stats_per_categoria_difficolta": cat_grouped.to_dict(orient="records"),
+        "stats_per_difficolta": diff_grouped.to_dict(orient="records"),
+        "stats_per_domanda": quesiti_grouped.to_dict(orient="records"),
+        "stats_per_studente": student_grouped.to_dict(orient="records"),
+    }
