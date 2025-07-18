@@ -56,7 +56,7 @@ namespace QuizClient
         private void ProfileStats_Click(object sender, RoutedEventArgs e)
         {
             // Naviga a pagina statistiche (da implementare)
-            MessageBox.Show("Naviga a Statistiche Profilo (token disponibile)");
+            _mainFrame.Navigate(new StudentStats(_jwtToken));
         }
 
         private void Logout_Click(object sender, RoutedEventArgs e)

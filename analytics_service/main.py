@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from analytics_service.handlers import handlers  # importa il router per le API di autenticazione
+from handlers.handlers import routes_group  # importa il router per le API di autenticazione
+import uvicorn
 
 app = FastAPI(
     title="Analytics Service",
@@ -7,6 +8,9 @@ app = FastAPI(
 )
 
 # Include le rotte
-app.include_router(handlers.routes_group, prefix="/stats", tags=["analytics"])
+app.include_router(routes_group, prefix="/stats", tags=["analytics"])
 
 
+# Avvia il server specificando la porta
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8005, reload=True)

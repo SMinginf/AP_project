@@ -123,4 +123,46 @@ namespace QuizClient.Models
         public bool Selezionata { get; set; } // Per bind alla checkbox
     }
 
+
+
+    // Modello per la risposta del server quando si richiedono le statistiche di uno studente
+    public class StudentStatsResponse
+    {
+        [JsonPropertyName("studente")]
+        public Utente Studente { get; set; } = new();
+
+        [JsonPropertyName("stats_per_categoria_difficolta")]
+        public List<StatsPerCategoriaDifficolta> StatsPerCategoriaDifficolta { get; set; } = new();
+
+        [JsonPropertyName("andamento_temporale")]
+        public List<TimelineData> AndamentoTemporale { get; set; } = new();
+    }
+
+
+
+    public class StatsPerCategoriaDifficolta
+    {
+        [JsonPropertyName("categoria")]
+        public string Categoria { get; set; } = "";
+        [JsonPropertyName("difficolta")]
+        public string Difficolta { get; set; } = "";
+        [JsonPropertyName("corrette")]
+        public int Corrette { get; set; }
+        [JsonPropertyName("sbagliate")]
+        public int Sbagliate { get; set; }
+        [JsonPropertyName("non_date")]
+        public int NonDate { get; set; }
+    }
+
+    public class TimelineData
+    {
+        [JsonPropertyName("date")]
+        public DateTime Date { get; set; }
+        [JsonPropertyName("corrette")]
+        public int Corrette { get; set; }
+        [JsonPropertyName("sbagliate")]
+        public int Sbagliate { get; set; }
+        [JsonPropertyName("non_date")]
+        public int NonDate { get; set; }
+    }
 }
