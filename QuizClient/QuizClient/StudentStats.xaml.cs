@@ -1,6 +1,7 @@
 ﻿using OxyPlot;
 using OxyPlot.Series;
 using QuizClient.Services;
+using QuizClient.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,9 @@ namespace QuizClient
     public partial class StudentStats : Page
     {
         private readonly AnalyticsService analyticsService;
-        private string _jwtToken; // Token JWT per autenticazione
+        private readonly string _jwtToken; // Token JWT per autenticazione
+        private StudentStatsResponse? _stats;
+
         public StudentStats(string jwtToken)
         {
             InitializeComponent();
@@ -30,7 +33,7 @@ namespace QuizClient
             _jwtToken = jwtToken;
             analyticsService = new AnalyticsService(_jwtToken); // Inizializza il servizio con il token JWT
             LoadStudentStats();
-            
+
         }
 
         private async void LoadStudentStats()
@@ -43,13 +46,20 @@ namespace QuizClient
                 return;
             }
 
-            var studentStats = result.Data; // Ottieni i dati delle statistiche dello studente
+            _stats = result.Data; // Salva i dati delle statistiche dello studente
+
+            // Popola info personali
+            var studente = _stats.Studente;
+            NameText.Text = $"{studente.Nome} {studente.Cognome}";
+            EmailText.Text = studente.Email;
+            BirthDateText.Text = studente.DataNascita.ToShortDateString();
+            GenderText.Text = studente.Genere;
 
             // Popola il DataGrid con le statistiche per categoria e difficoltà
-            StudentStatsDataGrid.ItemsSource = studentStats.StatsPerCategoriaDifficolta;
+            StudentStatsDataGrid.ItemsSource = _stats.StatsPerCategoriaDifficolta;
 
             // Imposta i dati per il grafico temporale
-            var timelineData = studentStats.AndamentoTemporale;
+            var timelineData = _stats.AndamentoTemporale;
             var plotModel = new PlotModel { Title = "Andamento Temporale" };
 
             // Aggiungiamo le serie per "Corrette", "Sbagliate" e "Non Date"
@@ -88,6 +98,27 @@ namespace QuizClient
 
             // Impostiamo il grafico
             StudentTimelineChart.Model = plotModel;
+        }
+
+        private void InfoButton_Click(object sender, RoutedEventArgs e)
+        {
+            InfoPanel.Visibility = Visibility.Visible;
+            PerformancePanel.Visibility = Visibility.Collapsed;
+            TimelinePanel.Visibility = Visibility.Collapsed;
+        }
+
+        private void PerformanceButton_Click(object sender, RoutedEventArgs e)
+        {
+            InfoPanel.Visibility = Visibility.Collapsed;
+            PerformancePanel.Visibility = Visibility.Visible;
+            TimelinePanel.Visibility = Visibility.Collapsed;
+        }
+
+        private void TimelineButton_Click(object sender, RoutedEventArgs e)
+        {
+            InfoPanel.Visibility = Visibility.Collapsed;
+            PerformancePanel.Visibility = Visibility.Collapsed;
+            TimelinePanel.Visibility = Visibility.Visible;
         }
     }
 
