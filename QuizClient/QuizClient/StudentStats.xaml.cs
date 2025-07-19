@@ -1,5 +1,6 @@
 ﻿using OxyPlot;
 using OxyPlot.Series;
+using OxyPlot.Axes;
 using QuizClient.Services;
 using QuizClient.Models;
 using System;
@@ -33,7 +34,7 @@ namespace QuizClient
             _jwtToken = jwtToken;
             analyticsService = new AnalyticsService(_jwtToken); // Inizializza il servizio con il token JWT
             LoadStudentStats();
-
+            
         }
 
         private async void LoadStudentStats()
@@ -55,48 +56,71 @@ namespace QuizClient
             BirthDateText.Text = studente.DataNascita.ToShortDateString();
             GenderText.Text = studente.Genere;
 
-            // Popola il DataGrid con le statistiche per categoria e difficoltà
-            StudentStatsDataGrid.ItemsSource = _stats.StatsPerCategoriaDifficolta;
+            // Imposta i dati per il grafico delle prestazioni per categoria/difficoltà
+            var performanceModel = new PlotModel { Title = "Prestazioni per Categoria/Difficoltà" };
+            var categoryAxis = new CategoryAxis { Position = AxisPosition.Bottom };
+            var valueAxis = new LinearAxis { Position = AxisPosition.Left, MinimumPadding = 0, AbsoluteMinimum = 0 };
+            performanceModel.Axes.Add(categoryAxis);
+            performanceModel.Axes.Add(valueAxis);
+
+            var correctSeriesCat = new ColumnSeries { Title = "Corrette" };
+            var wrongSeriesCat = new ColumnSeries { Title = "Sbagliate" };
+            var notAnsweredSeriesCat = new ColumnSeries { Title = "Non Date" };
+
+            foreach (var stat in _stats.StatsPerCategoriaDifficolta)
+            {
+                var label = $"{stat.Categoria} ({stat.Difficolta})";
+                categoryAxis.Labels.Add(label);
+                correctSeriesCat.Items.Add(new ColumnItem(stat.Corrette));
+                wrongSeriesCat.Items.Add(new ColumnItem(stat.Sbagliate));
+                notAnsweredSeriesCat.Items.Add(new ColumnItem(stat.NonDate));
+            }
+
+            performanceModel.Series.Add(correctSeriesCat);
+            performanceModel.Series.Add(wrongSeriesCat);
+            performanceModel.Series.Add(notAnsweredSeriesCat);
+            PerformanceChart.Model = performanceModel;
 
             // Imposta i dati per il grafico temporale
             var timelineData = _stats.AndamentoTemporale;
             var plotModel = new PlotModel { Title = "Andamento Temporale" };
 
-            // Aggiungiamo le serie per "Corrette", "Sbagliate" e "Non Date"
-            var correctSeries = new BarSeries
+            var dateAxis = new DateTimeAxis
             {
-                Title = "Corrette",
-                LabelPlacement = LabelPlacement.Inside,
-                LabelFormatString = "{0}"
+                Position = AxisPosition.Bottom,
+                StringFormat = "dd/MM",
+                IntervalType = DateTimeIntervalType.Days,
+                MinorIntervalType = DateTimeIntervalType.Days,
+                MajorGridlineStyle = LineStyle.Solid,
+                MinorGridlineStyle = LineStyle.Dot
             };
 
-            var wrongSeries = new BarSeries
+            var valueAxisTime = new LinearAxis
             {
-                Title = "Sbagliate",
-                LabelPlacement = LabelPlacement.Inside,
-                LabelFormatString = "{0}"
+                Position = AxisPosition.Left,
+                MinimumPadding = 0,
+                AbsoluteMinimum = 0
             };
 
-            var notAnsweredSeries = new BarSeries
-            {
-                Title = "Non Date",
-                LabelPlacement = LabelPlacement.Inside,
-                LabelFormatString = "{0}"
-            };
+            plotModel.Axes.Add(dateAxis);
+            plotModel.Axes.Add(valueAxisTime);
+
+            var correctSeries = new LineSeries { Title = "Corrette", MarkerType = MarkerType.Circle };
+            var wrongSeries = new LineSeries { Title = "Sbagliate", MarkerType = MarkerType.Circle };
+            var notAnsweredSeries = new LineSeries { Title = "Non Date", MarkerType = MarkerType.Circle };
 
             foreach (var record in timelineData)
             {
-                correctSeries.Items.Add(new BarItem { Value = record.Corrette });
-                wrongSeries.Items.Add(new BarItem { Value = record.Sbagliate });
-                notAnsweredSeries.Items.Add(new BarItem { Value = record.NonDate });
+                var x = DateTimeAxis.ToDouble(record.Date);
+                correctSeries.Points.Add(new DataPoint(x, record.Corrette));
+                wrongSeries.Points.Add(new DataPoint(x, record.Sbagliate));
+                notAnsweredSeries.Points.Add(new DataPoint(x, record.NonDate));
             }
 
-            // Aggiungiamo le serie al grafico
             plotModel.Series.Add(correctSeries);
             plotModel.Series.Add(wrongSeries);
             plotModel.Series.Add(notAnsweredSeries);
 
-            // Impostiamo il grafico
             StudentTimelineChart.Model = plotModel;
         }
 
