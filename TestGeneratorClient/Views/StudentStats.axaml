@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:oxy="clr-namespace:OxyPlot.Avalonia;assembly=OxyPlot.Avalonia"
+             x:Class="TestGeneratorClient.Views.StudentStats">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="150"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0" Background="#EFEFEF">
+            <Button Content="Informazioni" Margin="10" Click="InfoButton_Click"/>
+            <Button Content="Prestazioni" Margin="10" Click="PerformanceButton_Click"/>
+            <Button Content="Andamento" Margin="10" Click="TimelineButton_Click"/>
+        </StackPanel>
+        <Grid Grid.Column="1" Margin="10">
+            <Grid x:Name="InfoPanel" IsVisible="True">
+                <StackPanel>
+                    <TextBlock Text="Informazioni Studente" FontSize="20" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Nome:" Grid.Row="0" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5"/>
+                        <TextBlock x:Name="NameText" Grid.Row="0" Grid.Column="1"/>
+                        <TextBlock Text="Email:" Grid.Row="1" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5"/>
+                        <TextBlock x:Name="EmailText" Grid.Row="1" Grid.Column="1"/>
+                        <TextBlock Text="Data Nascita:" Grid.Row="2" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5"/>
+                        <TextBlock x:Name="BirthDateText" Grid.Row="2" Grid.Column="1"/>
+                        <TextBlock Text="Genere:" Grid.Row="3" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="GenderText" Grid.Row="3" Grid.Column="1"/>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+            <Grid x:Name="PerformancePanel" IsVisible="False">
+                <StackPanel>
+                    <TextBlock Text="Prestazioni per Categoria/Difficoltà" FontSize="20" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <oxy:PlotView x:Name="PerformanceChart" Height="300" />
+                </StackPanel>
+            </Grid>
+            <Grid x:Name="TimelinePanel" IsVisible="False">
+                <StackPanel>
+                    <TextBlock Text="Andamento Temporale" FontSize="20" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <oxy:PlotView x:Name="StudentTimelineChart" Height="300" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>
