@@ -1,4 +1,4 @@
-﻿<Page x:Class="QuizClient.StudentStats"
+<Page x:Class="QuizClient.StudentStats"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -22,7 +22,7 @@
         </StackPanel>
 
         <!-- Contenuto principale -->
-        <Grid Grid.Column="1" Margin="10" Background="#EFEFEF">
+        <Grid Grid.Column="1" Margin="10">
             <!-- Informazioni personali -->
             <Grid x:Name="InfoPanel" Visibility="Visible">
                 <StackPanel>
@@ -53,8 +53,8 @@
             <!-- Prestazioni per categoria/difficolta -->
             <Grid x:Name="PerformancePanel" Visibility="Collapsed">
                 <StackPanel>
-                    <TextBlock Text="Prestazioni per Categoria/Difficolta" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" />
-                    <DataGrid x:Name="StudentStatsDataGrid" AutoGenerateColumns="True" />
+                    <TextBlock Text="Prestazioni per Categoria/Difficoltà" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" />
+                    <oxy:PlotView x:Name="PerformanceChart" Height="300" />
                 </StackPanel>
             </Grid>
 
