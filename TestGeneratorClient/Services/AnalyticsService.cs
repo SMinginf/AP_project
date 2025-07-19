@@ -4,8 +4,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using QuizClient.Models;
-using QuizClient.Utils;
+using TestGeneratorClient.Models;
+using TestGeneratorClient.Utils;
 using System.Net.Http.Json;
 
 namespace TestGeneratorClient.Services

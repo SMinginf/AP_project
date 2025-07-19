@@ -1,0 +1,11 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TestGeneratorClient.Views.CategoriesPage">
+    <Grid Background="#F0F0F0">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20">
+            <TextBlock Text="Gestione Categorie" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,30"/>
+            <TextBlock Text="Pagina in costruzione..." FontSize="16" HorizontalAlignment="Center"/>
+            <Button Content="Torna alla Lobby" Width="200" Height="40" Click="BackToLobby_Click"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

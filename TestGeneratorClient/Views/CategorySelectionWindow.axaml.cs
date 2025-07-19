@@ -3,7 +3,9 @@ using Avalonia.Interactivity;
 using TestGeneratorClient.Models;
 using TestGeneratorClient.Services;
 using TestGeneratorClient.Utils;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace TestGeneratorClient.Views;
 
@@ -13,6 +15,7 @@ public partial class CategorySelectionWindow : Window
     private ObservableCollection<Categoria> _categorieFiltrate = new();
     public List<Categoria>? Selezionate { get; private set; }
     public bool Unione { get; set; }
+    public bool? DialogResult { get; private set; }
     private readonly CRUDService _CRUDService;
     private readonly string _jwtToken;
 
