@@ -56,7 +56,29 @@ namespace QuizClient
             BirthDateText.Text = studente.DataNascita.ToShortDateString();
             GenderText.Text = studente.Genere;
 
-            // Imposta i dati per il grafico delle prestazioni per categoria/difficoltà
+            // Grafico quiz per categoria
+            var categoryModel = new PlotModel { Title = "Quiz per Categoria" };
+            var catAxis = new CategoryAxis { Position = AxisPosition.Bottom };
+            var catValueAxis = new LinearAxis { Position = AxisPosition.Left, MinimumPadding = 0, AbsoluteMinimum = 0 };
+            categoryModel.Axes.Add(catAxis);
+            categoryModel.Axes.Add(catValueAxis);
+
+            var catSeries = new ColumnSeries { Title = "Quiz" };
+
+            var byCategory = _stats.StatsPerCategoriaDifficolta
+                .GroupBy(s => s.Categoria)
+                .Select(g => new { Categoria = g.Key, Totale = g.Sum(s => s.Corrette + s.Sbagliate + s.NonDate) });
+
+            foreach (var stat in byCategory)
+            {
+                catAxis.Labels.Add(stat.Categoria);
+                catSeries.Items.Add(new ColumnItem(stat.Totale));
+            }
+
+            categoryModel.Series.Add(catSeries);
+            CategoryChart.Model = categoryModel;
+
+            // Grafico prestazioni per categoria/difficoltà
             var performanceModel = new PlotModel { Title = "Prestazioni per Categoria/Difficoltà" };
             var categoryAxis = new CategoryAxis { Position = AxisPosition.Bottom };
             var valueAxis = new LinearAxis { Position = AxisPosition.Left, MinimumPadding = 0, AbsoluteMinimum = 0 };
@@ -80,6 +102,34 @@ namespace QuizClient
             performanceModel.Series.Add(wrongSeriesCat);
             performanceModel.Series.Add(notAnsweredSeriesCat);
             PerformanceChart.Model = performanceModel;
+
+            // Grafico percentuale corrette per difficoltà
+            var diffModel = new PlotModel { Title = "Percentuale Corrette per Difficoltà" };
+            var diffAxis = new CategoryAxis { Position = AxisPosition.Bottom };
+            var diffValueAxis = new LinearAxis { Position = AxisPosition.Left, Minimum = 0, Maximum = 100 };
+            diffModel.Axes.Add(diffAxis);
+            diffModel.Axes.Add(diffValueAxis);
+
+            var diffSeries = new ColumnSeries { Title = "% Corrette" };
+
+            var byDiff = _stats.StatsPerCategoriaDifficolta
+                .GroupBy(s => s.Difficolta)
+                .Select(g => new
+                {
+                    Difficolta = g.Key,
+                    Corrette = g.Sum(s => s.Corrette),
+                    Totali = g.Sum(s => s.Corrette + s.Sbagliate + s.NonDate)
+                });
+
+            foreach (var stat in byDiff)
+            {
+                diffAxis.Labels.Add(stat.Difficolta);
+                double perc = stat.Totali > 0 ? (double)stat.Corrette / stat.Totali * 100.0 : 0;
+                diffSeries.Items.Add(new ColumnItem(perc));
+            }
+
+            diffModel.Series.Add(diffSeries);
+            DifficultyChart.Model = diffModel;
 
             // Imposta i dati per il grafico temporale
             var timelineData = _stats.AndamentoTemporale;
