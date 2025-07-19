@@ -6,8 +6,8 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using QuizClient.Models;
-using QuizClient.Utils;
+using TestGeneratorClient.Models;
+using TestGeneratorClient.Utils;
 
 namespace TestGeneratorClient.Services
 {

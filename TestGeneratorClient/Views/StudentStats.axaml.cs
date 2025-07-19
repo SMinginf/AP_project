@@ -47,17 +47,17 @@ public partial class StudentStats : UserControl
         performanceModel.Axes.Add(categoryAxis);
         performanceModel.Axes.Add(valueAxis);
 
-        var correctSeriesCat = new ColumnSeries { Title = "Corrette" };
-        var wrongSeriesCat = new ColumnSeries { Title = "Sbagliate" };
-        var notAnsweredSeriesCat = new ColumnSeries { Title = "Non Date" };
+        var correctSeriesCat = new BarSeries { Title = "Corrette" };
+        var wrongSeriesCat = new BarSeries { Title = "Sbagliate" };
+        var notAnsweredSeriesCat = new BarSeries { Title = "Non Date" };
 
         foreach (var stat in _stats.StatsPerCategoriaDifficolta)
         {
             var label = $"{stat.Categoria} ({stat.Difficolta})";
             categoryAxis.Labels.Add(label);
-            correctSeriesCat.Items.Add(new ColumnItem(stat.Corrette));
-            wrongSeriesCat.Items.Add(new ColumnItem(stat.Sbagliate));
-            notAnsweredSeriesCat.Items.Add(new ColumnItem(stat.NonDate));
+            correctSeriesCat.Items.Add(new BarItem(stat.Corrette));
+            wrongSeriesCat.Items.Add(new BarItem(stat.Sbagliate));
+            notAnsweredSeriesCat.Items.Add(new BarItem(stat.NonDate));
         }
 
         performanceModel.Series.Add(correctSeriesCat);

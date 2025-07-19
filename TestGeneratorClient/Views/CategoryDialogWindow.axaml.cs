@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using TestGeneratorClient.Models;
@@ -8,6 +9,7 @@ namespace TestGeneratorClient.Views;
 public partial class CategoryDialogWindow : Window
 {
     public Categoria CategoriaCreata { get; private set; } = new();
+    public bool? DialogResult { get; private set; }
     private readonly string _jwtToken;
 
     public CategoryDialogWindow(string tk)
