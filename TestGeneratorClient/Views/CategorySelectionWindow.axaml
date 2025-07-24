@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="using:TestGeneratorClient.Models"
         x:Class="TestGeneratorClient.Views.CategorySelectionWindow"
         Width="600" Height="500" Title="Seleziona Categorie">
     <Grid Margin="10">
@@ -25,22 +26,18 @@
                 <Run Text="- Intersezione: le domande devono appartenere a tutte le categorie selezionate."/>
             </TextBlock>
         </StackPanel>
-        <ListView Grid.Row="2" x:Name="CategoryListView">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="✓" Width="40">
-                        <GridViewColumn.CellTemplate>
-                            <DataTemplate>
-                                <CheckBox IsChecked="{Binding Selezionata}"/>
-                            </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
-                    <GridViewColumn Header="Nome" DisplayMemberBinding="{Binding Nome}" Width="200"/>
-                    <GridViewColumn Header="Tipo" DisplayMemberBinding="{Binding Tipo}" Width="100"/>
-                    <GridViewColumn Header="Creatore" DisplayMemberBinding="{Binding Docente.Username}" Width="150"/>
-                </GridView>
-            </ListView.View>
-        </ListView>
+        <ListBox Grid.Row="2" x:Name="CategoryListView">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:Categoria">
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <CheckBox IsChecked="{Binding Selezionata}" Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding Nome}" Width="200" Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding Tipo}" Width="100" Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding Docente.Username}" Width="150"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 10 0 0">
             <Button Content="Annulla" Width="80" Margin="5" Click="Annulla_Click"/>
             <Button Content="Conferma" Width="100" Margin="5" Click="Conferma_Click"/>

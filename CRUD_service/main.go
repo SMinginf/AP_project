@@ -1,7 +1,7 @@
 package main
 
 import (
-	"AP_project/categorie_service/routes"
+	"AP_project/CRUD_service/routes"
 
 	"github.com/gin-gonic/gin"
 )

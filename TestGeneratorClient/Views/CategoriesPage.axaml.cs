@@ -25,7 +25,7 @@ public partial class CategoriesPage : UserControl
         _mainWindow = mainWindow;
         _crudService = new CRUDService(_jwtToken);
         JwtUtils.ValidateDocenteRole(_jwtToken, null, this);
-        CategorieGrid.Items = Categorie;
+        CategorieGrid.ItemsSource = Categorie;
         CaricaCategorie();
     }
 
@@ -185,8 +185,8 @@ public partial class CategoriesPage : UserControl
             bool seleziona = cb.IsChecked == true;
             foreach (var cat in Categorie)
                 cat.Selezionata = seleziona;
-            CategorieGrid.Items = null;
-            CategorieGrid.Items = Categorie;
+            CategorieGrid.ItemsSource = null;
+            CategorieGrid.ItemsSource = Categorie;
         }
     }
 

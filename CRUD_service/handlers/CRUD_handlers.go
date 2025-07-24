@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"AP_project/categorie_service/database"
-	"AP_project/categorie_service/models"
+	"AP_project/CRUD_service/database"
+	"AP_project/CRUD_service/models"
 	"fmt"
 	"net/http"
 
@@ -105,6 +105,36 @@ func GetCategorieByDocente(c *gin.Context) {
 	c.JSON(http.StatusOK, categorie)
 }
 
+func GetCategorieByStudente(c *gin.Context) {
+	idStudente := c.Param("id_studente")
+	if idStudente == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID dello studente mancante"})
+		return
+	}
+
+	var categorie []models.Categoria
+
+	// Query per recuperare le categorie dei quesiti presenti nei quiz svolti dallo studente
+	err := database.DB.
+		Table("categorie").
+		Select("DISTINCT categorie.*").
+		Joins("JOIN categoria_quesito ON categorie.id = categoria_quesito.id_categoria").
+		Joins("JOIN quesiti ON categoria_quesito.id_quesito = quesiti.id").
+		Joins("JOIN quiz_quesiti ON quesiti.id = quiz_quesiti.quesito_id").
+		Joins("JOIN quiz ON quiz_quesiti.quiz_id = quiz.id").
+		Where("quiz.id_utente = ?", idStudente).
+		Preload("Docente").
+		Find(&categorie).Error
+
+	if err != nil {
+		fmt.Println("Errore nel recupero delle categorie per lo studente:", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nel recupero delle categorie per lo studente"})
+		return
+	}
+
+	c.JSON(http.StatusOK, categorie)
+}
+
 // --- FUNZIONI CRUD PER I QUESITI ---
 
 func CreateQuesito(c *gin.Context) {
@@ -196,4 +226,42 @@ func GetQuesitiByDocenteAndCategoria(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, categorie)
+}
+
+// Funzioni CRUD per gli utenti
+func GetUtente(c *gin.Context) {
+	id := c.Param("id_utente")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID utente mancante"})
+		return
+	}
+
+	var utente models.Utente
+	if err := database.DB.First(&utente, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Utente non trovato"})
+		return
+	}
+
+	c.JSON(http.StatusOK, utente)
+}
+
+func UpdateUtente(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID utente mancante"})
+		return
+	}
+
+	var utente models.Utente
+	if err := c.ShouldBindJSON(&utente); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := database.DB.Model(&models.Utente{}).Where("id = ?", id).Updates(utente).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nella modifica dell'utente"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Utente modificato con successo"})
 }

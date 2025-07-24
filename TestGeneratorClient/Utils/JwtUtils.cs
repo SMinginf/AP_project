@@ -69,7 +69,12 @@ namespace TestGeneratorClient.Utils
         {
             bool isDocente = false;
             try{ var ruolo = GetClaimAsString(jwt, "ruolo"); isDocente = ruolo == "Docente"; } catch{ isDocente = false; }
-            if(!isDocente){ await MessageBox.Avalonia.MessageBoxManager.GetMessageBoxStandardWindow("Accesso negato","Accesso non autorizzato. Solo i docenti possono visualizzare questa pagina.").ShowDialog((Window)control.VisualRoot!); if(control is Window win){ win.Close(); } else { control.IsEnabled=false; } }
+            if(!isDocente){ 
+                await MessageBox.Avalonia.MessageBoxManager
+                    .GetMessageBoxStandardWindow("Accesso negato","Accesso non autorizzato. Solo i docenti possono visualizzare questa pagina.")
+                    .ShowDialog(null); 
+                control.IsEnabled = false; 
+            }
         }
     }
 }

@@ -8,27 +8,30 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="StudentStats">
 
-    <Grid>
+    <Grid Background="White">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="150" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <!-- Menu laterale -->
-        <StackPanel Grid.Column="0" Background="#EFEFEF">
-            <Button Content="Informazioni" Margin="10" Click="InfoButton_Click" />
-            <Button Content="Prestazioni" Margin="10" Click="PerformanceButton_Click" />
-            <Button Content="Andamento" Margin="10" Click="TimelineButton_Click" />
+        <StackPanel Grid.Column="0" Background="AliceBlue">
+            <Button Content="Account" Margin="10" Click="InfoButton_Click" />
+            <Button Content="Statistiche generali" Margin="10" Click="GeneralStatsButton_Click" />
+            <Button Content="Statistiche per categoria " Margin="10" Click="StatsPerCategoryButton_Click" />
+            <Button Content="Indietro" Margin="10" Click="BackButton_Click" />
         </StackPanel>
 
         <!-- Contenuto principale -->
-        <Grid Grid.Column="1" Margin="10">
+        <Grid Grid.Column="1" Margin="10" Background="AliceBlue">
             <!-- Informazioni personali -->
-            <Grid x:Name="InfoPanel" Visibility="Visible">
+            <Grid x:Name="InfoPanel" Visibility="Collapsed">
                 <StackPanel>
                     <TextBlock Text="Informazioni Studente" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" />
                     <Grid>
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -40,35 +43,68 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Nome:" Grid.Row="0" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5" />
                         <TextBlock x:Name="NameText" Grid.Row="0" Grid.Column="1" />
-                        <TextBlock Text="Email:" Grid.Row="1" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5" />
-                        <TextBlock x:Name="EmailText" Grid.Row="1" Grid.Column="1" />
-                        <TextBlock Text="Data Nascita:" Grid.Row="2" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5" />
-                        <TextBlock x:Name="BirthDateText" Grid.Row="2" Grid.Column="1" />
-                        <TextBlock Text="Genere:" Grid.Row="3" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,0" />
-                        <TextBlock x:Name="GenderText" Grid.Row="3" Grid.Column="1" />
+                        <TextBlock Text="Cognome:" Grid.Row="1" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5" />
+                        <TextBlock x:Name="CognomeText" Grid.Row="1" Grid.Column="1" />
+                        <TextBlock Text="Email:" Grid.Row="2" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5" />
+                        <TextBlock x:Name="EmailText" Grid.Row="2" Grid.Column="1" />
+                        <TextBlock Text="Username:" Grid.Row="3" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5" />
+                        <TextBlock x:Name="UsernameText" Grid.Row="3" Grid.Column="1" />
+                        <TextBlock Text="Data di Nascita:" Grid.Row="4" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5" />
+                        <TextBlock x:Name="BirthDateText" Grid.Row="4" Grid.Column="1" />
+                        <TextBlock Text="Genere:" Grid.Row="5" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,0" />
+                        <TextBlock x:Name="GenderText" Grid.Row="5" Grid.Column="1" />
                     </Grid>
                 </StackPanel>
             </Grid>
 
-            <!-- Prestazioni per categoria/difficolta -->
-            <Grid x:Name="PerformancePanel" Visibility="Collapsed">
-                <StackPanel>
-                    <TextBlock Text="Quiz per Categoria" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" />
-                    <oxy:PlotView x:Name="CategoryChart" Height="250" Margin="0,0,0,20" />
-                    <TextBlock Text="Prestazioni per Categoria/Difficoltà" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" />
-                    <oxy:PlotView x:Name="PerformanceChart" Height="250" Margin="0,0,0,20" />
-                    <TextBlock Text="Percentuale Corrette per Difficoltà" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" />
-                    <oxy:PlotView x:Name="DifficultyChart" Height="250" />
-                </StackPanel>
-            </Grid>
 
-            <!-- Andamento temporale -->
-            <Grid x:Name="TimelinePanel" Visibility="Collapsed">
-                <StackPanel>
-                    <TextBlock Text="Andamento Temporale" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" />
-                    <oxy:PlotView x:Name="StudentTimelineChart" Height="300" />
-                </StackPanel>
+            <!-- Statistiche generali -->
+            <Grid x:Name="GeneralStatsPanel" Visibility="Visible">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Statistiche Generali" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Grid.Row="0"/>
+                <TextBlock x:Name="GeneralStatsTextBlock" Margin="0,0,0,8" Grid.Row="1"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="2">
+                    <StackPanel>
+                        <oxy:PlotView x:Name="GeneralStatsPieChart" Height="250" Margin="0,0,0,20"/>
+                        <oxy:PlotView x:Name="PunteggiPerCategoriaChart" Height="350" Margin="0,0,0,20"/>
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
+                <!-- Statistiche per categoria -->
+            <Grid x:Name="StatsPanel" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Statistiche per categoria" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Grid.Row="0"/>
+                <TextBlock Text="Seleziona una o più categorie per visualizzare le relative statistiche." Margin="0,0,0,8" Grid.Row="1"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="2">
+                    <TextBox x:Name="SelectedCategoriesBox" IsReadOnly="True" Width="220"/>
+                    <Button Content="Scegli categorie" Width="120" Margin="8,0,0,0" Click="ChooseCategories_Click"/>
+                </StackPanel>
+
+                <Grid Grid.Row="3">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                        <StackPanel>
+                            <StackPanel x:Name="QuizEQuesitiTotaliPanel" Margin="0,0,0,15">
+                                <TextBlock x:Name="QuizUniciText"  FontSize="14" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="QuesitiTotaliText"  FontSize="14"/>
+                            </StackPanel>
+                            <oxy:PlotView x:Name="StatsPerCategoriaDifficoltaChart" Height="300" Margin="0,0,0,20"/>
+                            <oxy:PlotView x:Name="PercentualiTotaliPieChart" Height="300" Margin="0,0,0,20"/>
+                            <oxy:PlotView x:Name="StudentTimelineChart" Height="300" Margin="0,0,0,20"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+            
         </Grid>
     </Grid>
 </Page>

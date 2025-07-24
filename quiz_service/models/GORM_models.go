@@ -83,9 +83,10 @@ func (Quiz) TableName() string {
 }
 
 type QuizQuesiti struct {
-	QuizID         uint `gorm:"column:quiz_id;primaryKey"`
-	QuesitoID      uint `gorm:"column:quesito_id;primaryKey"`
-	RispostaUtente int  `gorm:"column:risposta_utente"`
+	QuizID    uint `gorm:"column:quiz_id;primaryKey"`
+	QuesitoID uint `gorm:"column:quesito_id;primaryKey"`
+	// RispostaUtente è un campo che può essere nullo (risposta non data), quindi usiamo un puntatore a int
+	RispostaUtente *int `gorm:"column:risposta_utente"`
 }
 
 func (QuizQuesiti) TableName() string {

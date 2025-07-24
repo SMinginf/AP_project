@@ -1,20 +1,26 @@
 package routes
 
 import (
-	"AP_project/categorie_service/handlers"
-	"AP_project/categorie_service/utils"
+	"AP_project/CRUD_service/handlers"
+	"AP_project/CRUD_service/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRoutes(r *gin.Engine) {
-	sessionRoutes := r.Group("/categorie")
-	sessionRoutes.Use(utils.AuthMiddleware())
+	CategoriesRouter := r.Group("/categorie")
+	UserRouter := r.Group("/utente")
 
-	sessionRoutes.GET("/pubbliche", handlers.GetCategoriePubbliche)
-	sessionRoutes.POST("/create", handlers.CreateCategoria)
-	sessionRoutes.PUT("/update", handlers.UpdateCategoria)
-	sessionRoutes.DELETE("/delete", handlers.DeleteCategorie)
-	sessionRoutes.GET("/docente/:id_docente", handlers.GetCategorieByDocente)
+	UserRouter.Use(utils.AuthMiddleware())
+	CategoriesRouter.Use(utils.AuthMiddleware())
+
+	CategoriesRouter.GET("/pubbliche", handlers.GetCategoriePubbliche)
+	CategoriesRouter.GET("/studente/:id_studente", handlers.GetCategorieByStudente)
+	CategoriesRouter.POST("/create", handlers.CreateCategoria)
+	CategoriesRouter.PUT("/update", handlers.UpdateCategoria)
+	CategoriesRouter.DELETE("/delete", handlers.DeleteCategorie)
+	CategoriesRouter.GET("/docente/:id_docente", handlers.GetCategorieByDocente)
+
+	UserRouter.GET("/:id_utente", handlers.GetUtente)
 
 }

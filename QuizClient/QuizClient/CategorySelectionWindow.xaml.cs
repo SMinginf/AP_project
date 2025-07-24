@@ -18,19 +18,39 @@ namespace QuizClient
 
         private readonly CRUDService _CRUDService;
         private string _jwtToken;
+        
+        private bool IsFromStatsPage = false; // Indica se la finestra è stata aperta dalla pagina delle statistiche. Mi serve per riutilizzare la pagina cambiando qualcosina.
 
-        public CategorySelectionWindow(string jwt)
+        public CategorySelectionWindow(string jwt, bool isFromStatsPage = false)
         {
             InitializeComponent();
             _jwtToken = jwt;
             _CRUDService = new CRUDService(_jwtToken);
+
+            IsFromStatsPage = isFromStatsPage;
+
+            Personalizza();
             CaricaCategorie();
         }
 
 
+        private void Personalizza()
+        {
+            if (IsFromStatsPage)
+            {
+                CategoryModePanel.Visibility = Visibility.Collapsed;
+            }
+        }
         private async void CaricaCategorie()
         {
-            var result = await _CRUDService.GetCategoriePubblicheAsync();
+            ServiceResult<List<Categoria>> result;
+
+            if (IsFromStatsPage)
+                // Se la finestra è stata aperta dalla pagina delle statistiche, mostro le categorie affrontate dallo studente
+                result = await _CRUDService.GetCategorieByStudenteAsync();
+            else
+                result = await _CRUDService.GetCategoriePubblicheAsync();
+
             if (result.Success && result.Data != null)
             {
                 _tutteLeCategorie = result.Data;

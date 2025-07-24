@@ -16,4 +16,4 @@ Thumbs.db
 # Python virtual environment
 auth_service/venv
 analytics_service/venv
-
+TestGeneratorClient

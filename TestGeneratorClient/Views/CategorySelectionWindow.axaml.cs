@@ -51,7 +51,6 @@ public partial class CategorySelectionWindow : Window
         {
             _categorieFiltrate.Add(cat);
         }
-        CategoryListView.ItemsSource = null;
         CategoryListView.ItemsSource = _categorieFiltrate;
     }
 
