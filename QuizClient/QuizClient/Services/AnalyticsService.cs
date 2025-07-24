@@ -24,16 +24,17 @@ namespace QuizClient.Services
             _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
         }
 
-        public async Task<ServiceResult<StudentStatsResponse>> GetStudentStatsAsync()
+
+        public async Task<ServiceResult<StudentGeneralStats>> GetStudentGeneralStatsAsync()
         {
             try
             {
                 var id_studente = JwtUtils.GetClaimAsUInt(_jwtToken, "user_id");
-                var response = await _client.GetAsync($"/stats/student/{id_studente}");
+                var response = await _client.GetAsync($"/stats/student/{id_studente}/general");
                 if (response.IsSuccessStatusCode)
                 {
-                    var data = await response.Content.ReadFromJsonAsync<StudentStatsResponse>();
-                    return new ServiceResult<StudentStatsResponse> { Data = data };
+                    var data = await response.Content.ReadFromJsonAsync<StudentGeneralStats>();
+                    return new ServiceResult<StudentGeneralStats> { Data = data };
                 }
                 else
                 {
@@ -42,7 +43,44 @@ namespace QuizClient.Services
                     try
                     {
                         using var doc = System.Text.Json.JsonDocument.Parse(error);
-                        if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                        if (doc.RootElement.TryGetProperty("detail", out var errorProp))
+                            errorMsg = errorProp.GetString() ?? errorMsg;
+                    }
+                    catch { }
+                    return new ServiceResult<StudentGeneralStats> { ErrorMessage = errorMsg };
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ServiceResult<StudentGeneralStats> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<StudentGeneralStats> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
+            }
+        }
+        public async Task<ServiceResult<StudentStatsResponse>> GetStudentStatsPerCategoryAsync(List<uint> categoria_ids)
+        {
+            try
+            {
+                var id_studente = JwtUtils.GetClaimAsUInt(_jwtToken, "user_id");
+                // Unisci gli ID in una stringa separata da virgole
+                var idsQuery = string.Join(",", categoria_ids);
+                var url = $"/stats/student/{id_studente}?categoria_ids={idsQuery}";
+                var response = await _client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<StudentStatsResponse>();
+                    return new ServiceResult<StudentStatsResponse> { Data = data};
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    string? errorMsg = $"Errore HTTP {response.StatusCode}";
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(error);
+                        if (doc.RootElement.TryGetProperty("detail", out var errorProp))
                             errorMsg = errorProp.GetString() ?? errorMsg;
                     }
                     catch { }
@@ -51,11 +89,11 @@ namespace QuizClient.Services
             }
             catch (HttpRequestException ex)
             {
-                return new ServiceResult<StudentStatsResponse> { ErrorMessage = $"Errore di rete: {ex.Message}"};
+                return new ServiceResult<StudentStatsResponse> { ErrorMessage = $"Errore di rete: {ex.Message}" };
             }
             catch (Exception ex)
             {
-                return new ServiceResult<StudentStatsResponse> { ErrorMessage = $"Errore imprevisto: {ex.Message}"};
+                return new ServiceResult<StudentStatsResponse> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
             }
         }
     }

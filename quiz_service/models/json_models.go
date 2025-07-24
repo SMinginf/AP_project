@@ -44,5 +44,6 @@ type StoreQuizInput struct {
 	RisposteSbagliate int    `json:"sbagliate" binding:"required"`
 	Durata            string `json:"durata" binding:"required"`
 	DataCreazione     string `json:"data_creazione" binding:"required"` // formato: "YYYY-MM-DD HH:MM:SS"
-	Risposte          []int  `json:"risposte_utente" binding:"required"`
+	// Una risposta può essere nulla, quindi uso un puntatore a int
+	Risposte []*int `json:"risposte_utente" binding:"required"`
 }

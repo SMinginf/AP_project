@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:utils="clr-namespace:TestGeneratorClient.Utils"
+             xmlns:models="using:TestGeneratorClient.Models"
              x:Class="TestGeneratorClient.Views.CategoriesPage">
     <UserControl.Resources>
         <utils:PubblicaToStringConverter x:Key="PubblicaToStringConverter"/>
@@ -22,14 +23,14 @@
             <CheckBox x:Name="FiltroPrivate" Content="Solo private" Checked="FiltroPrivata_Checked" Unchecked="Filtri_Unchecked"/>
         </StackPanel>
 
-        <DataGrid x:Name="CategorieGrid" Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,0,0,10" MinHeight="200" Height="300" DoubleTapped="CategorieGrid_DoubleTapped" SelectionMode="Single">
+        <DataGrid x:Name="CategorieGrid" Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,0,0,10" MinHeight="200" Height="300" DoubleTapped="CategorieGrid_DoubleTapped" SelectionMode="Single" x:DataType="models:Categoria">
             <DataGrid.Columns>
                 <DataGridTemplateColumn Width="35">
                     <DataGridTemplateColumn.Header>
                         <CheckBox Click="SelezionaTutteLeCheckbox_Click"/>
                     </DataGridTemplateColumn.Header>
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
+                        <DataTemplate x:DataType="models:Categoria">
                             <CheckBox IsChecked="{Binding Selezionata, Mode=TwoWay}" HorizontalAlignment="Center"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -38,7 +39,7 @@
                 <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" Width="*"/>
                 <DataGridTemplateColumn Header="Descrizione" Width="2*">
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
+                        <DataTemplate x:DataType="models:Categoria">
                             <TextBlock Text="{Binding Descrizione}" TextTrimming="CharacterEllipsis"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

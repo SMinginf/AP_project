@@ -1,12 +1,14 @@
 ﻿using OxyPlot;
-using OxyPlot.Series;
 using OxyPlot.Axes;
-using QuizClient.Services;
+using OxyPlot.Series;
 using QuizClient.Models;
+using QuizClient.Services;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,8 +26,11 @@ namespace QuizClient
     public partial class StudentStats : Page
     {
         private readonly AnalyticsService analyticsService;
+        private readonly CRUDService crudService;
+        
         private readonly string _jwtToken; // Token JWT per autenticazione
         private StudentStatsResponse? _stats;
+        private List<Categoria> _categorieSelezionate = new List<Categoria>();
 
         public StudentStats(string jwtToken)
         {
@@ -33,174 +38,398 @@ namespace QuizClient
 
             _jwtToken = jwtToken;
             analyticsService = new AnalyticsService(_jwtToken); // Inizializza il servizio con il token JWT
-            LoadStudentStats();
+            crudService = new CRUDService(_jwtToken); // Inizializza il servizio CRUD con il token JWT
+
+            LoadPersonalInfo();
+            LoadGeneralStats();
+
+        }
+
+        private async void LoadPersonalInfo() {
+            // Ottieni info personali dell'utente
+            var result = await crudService.GetUserAsync();
+            if (result == null || !result.Success || result.Data == null)
+            {
+                MessageBox.Show("Errore nel caricamento dei dati dell'utente: " + result?.ErrorMessage);
+                return;
+            }
+            var user_info = result.Data;
+
+            // Popola info personali
+            NameText.Text = user_info.Nome;
+            CognomeText.Text = user_info.Cognome;
+            EmailText.Text = user_info.Email;
+            UsernameText.Text = user_info.Username;
+            BirthDateText.Text = user_info.DataNascita.ToShortDateString();
+            GenderText.Text = user_info.Genere;
+
+        }
+
+        private async void LoadGeneralStats()
+        {
+            var result = await analyticsService.GetStudentGeneralStatsAsync();
+            if (result == null || !result.Success || result.Data == null)
+            {
+                MessageBox.Show("Errore nel caricamento delle statistiche generali dello studente: " + result?.ErrorMessage);
+                return;
+            }
+            var generalStats = result.Data;
+            // Popola le statistiche generali
+            GeneralStatsTextBlock.Text = $"L'utente ha svolto {generalStats.QuizCompletati} quiz in totale.\n" +
+                $"La categoria in cui è più forte è {generalStats.CategoriaPiuForte?.CategoriaNome}({generalStats.CategoriaPiuForte?.DocenteUsername}) " +
+                $"con il {generalStats.CategoriaPiuForte?.PercCorrette}% di risposte corrette su un totale di {generalStats.CategoriaPiuForte?.TotaleQuesiti} quesiti.\n" +
+                $"La categoria in cui è più debole è {generalStats.CategoriaPiuDebole?.CategoriaNome}({generalStats.CategoriaPiuDebole?.DocenteUsername}) " +
+                $"con il {generalStats.CategoriaPiuDebole?.PercCorrette}% di risposte corrette su un totale di {generalStats.CategoriaPiuDebole?.TotaleQuesiti} quesiti.";
+
+            ShowPercentualiTotaliChart(generalStats.StatisticheGenerali.PercCorrette, generalStats.StatisticheGenerali.PercSbagliate, generalStats.StatisticheGenerali.PercNonDate, GeneralStatsPieChart);
+            ShowUserCategoriesChart(generalStats.PunteggiPerCategoria);
             
         }
 
-        private async void LoadStudentStats()
-        {
-            var result = await analyticsService.GetStudentStatsAsync(); // Metodo per ottenere le statistiche dal server
 
-            if (result == null || !result.Success || result.Data == null)
+
+        private async void LoadStatsPerCategory()
+        {
+            var categoria_ids = _categorieSelezionate.Select(c => c.ID).ToList();
+            var stats_result = await analyticsService.GetStudentStatsPerCategoryAsync(categoria_ids);
+            if (stats_result == null || !stats_result.Success || stats_result.Data == null)
             {
-                MessageBox.Show("Errore nel caricamento delle statistiche dello studente: " + result?.ErrorMessage);
+                MessageBox.Show("Errore nel caricamento delle statistiche dello studente: " + stats_result?.ErrorMessage);
                 return;
             }
 
-            _stats = result.Data; // Salva i dati delle statistiche dello studente
+            _stats = stats_result.Data;
 
-            // Popola info personali
-            var studente = _stats.Studente;
-            NameText.Text = $"{studente.Nome} {studente.Cognome}";
-            EmailText.Text = studente.Email;
-            BirthDateText.Text = studente.DataNascita.ToShortDateString();
-            GenderText.Text = studente.Genere;
+            // Mostra quiz e quesiti totali
+            QuizUniciText.Text = $"Numero di quiz svolti in cui compaiono le categorie selezionate: {_stats.QuizEQuesitiTotali.QuizUnici}";
+            QuesitiTotaliText.Text = $"Numero di quesiti svolti appartenenti alle categorie selezionate: {_stats.QuizEQuesitiTotali.QuesitiTotali}";
 
-            // Grafico quiz per categoria
-            var categoryModel = new PlotModel { Title = "Quiz per Categoria" };
-            var catAxis = new CategoryAxis { Position = AxisPosition.Bottom };
-            var catValueAxis = new LinearAxis { Position = AxisPosition.Left, MinimumPadding = 0, AbsoluteMinimum = 0 };
-            categoryModel.Axes.Add(catAxis);
-            categoryModel.Axes.Add(catValueAxis);
+            ShowStatsPerCategoriaChart();
+            ShowPercentualiTotaliChart(_stats.PercentualiTotali.PercCorrette, _stats.PercentualiTotali.PercSbagliate, _stats.PercentualiTotali.PercNonDate, PercentualiTotaliPieChart);
+            ShowAndamentoTemporaleChart();
+        }
 
-            var catSeries = new ColumnSeries { Title = "Quiz" };
+        private void ShowStatsPerCategoriaChart()
+        {
 
-            var byCategory = _stats.StatsPerCategoriaDifficolta
-                .GroupBy(s => s.Categoria)
-                .Select(g => new { Categoria = g.Key, Totale = g.Sum(s => s.Corrette + s.Sbagliate + s.NonDate) });
+            if (_stats == null || _stats.StatsPerCategoriaDifficolta == null || !_stats.StatsPerCategoriaDifficolta.Any())
+                return;
 
-            foreach (var stat in byCategory)
+            var difficulties = _stats.StatsPerCategoriaDifficolta
+                .Select(s => s.Difficolta)
+                .Distinct()
+                .ToList();
+
+            // Serie per ogni tipo di risposta
+            var corretteSeries = new ColumnSeries
             {
-                catAxis.Labels.Add(stat.Categoria);
-                catSeries.Items.Add(new ColumnItem(stat.Totale));
+                Title = "Corrette",
+                FillColor = OxyColors.SeaGreen
+            };
+            var sbagliateSeries = new ColumnSeries
+            {
+                Title = "Sbagliate",
+                FillColor = OxyColors.IndianRed
+            };
+            var nonDateSeries = new ColumnSeries
+            {
+                Title = "Non Date",
+                FillColor = OxyColors.SteelBlue
+            };
+
+            // Raggruppa per difficoltà
+            foreach (var diff in difficulties)
+            {
+                var stat = _stats.StatsPerCategoriaDifficolta.FirstOrDefault(s => s.Difficolta == diff);
+                corretteSeries.Items.Add(new ColumnItem(stat?.Corrette ?? 0));
+                sbagliateSeries.Items.Add(new ColumnItem(stat?.Sbagliate ?? 0));
+                nonDateSeries.Items.Add(new ColumnItem(stat?.NonDate ?? 0));
             }
 
-            categoryModel.Series.Add(catSeries);
-            CategoryChart.Model = categoryModel;
+            var model = new PlotModel { Title = "Risposte per Difficoltà" };
 
-            // Grafico prestazioni per categoria/difficoltà
-            var performanceModel = new PlotModel { Title = "Prestazioni per Categoria/Difficoltà" };
-            var categoryAxis = new CategoryAxis { Position = AxisPosition.Bottom };
-            var valueAxis = new LinearAxis { Position = AxisPosition.Left, MinimumPadding = 0, AbsoluteMinimum = 0 };
-            performanceModel.Axes.Add(categoryAxis);
-            performanceModel.Axes.Add(valueAxis);
-
-            var correctSeriesCat = new ColumnSeries { Title = "Corrette" };
-            var wrongSeriesCat = new ColumnSeries { Title = "Sbagliate" };
-            var notAnsweredSeriesCat = new ColumnSeries { Title = "Non Date" };
-
-            foreach (var stat in _stats.StatsPerCategoriaDifficolta)
-            {
-                var label = $"{stat.Categoria} ({stat.Difficolta})";
-                categoryAxis.Labels.Add(label);
-                correctSeriesCat.Items.Add(new ColumnItem(stat.Corrette));
-                wrongSeriesCat.Items.Add(new ColumnItem(stat.Sbagliate));
-                notAnsweredSeriesCat.Items.Add(new ColumnItem(stat.NonDate));
-            }
-
-            performanceModel.Series.Add(correctSeriesCat);
-            performanceModel.Series.Add(wrongSeriesCat);
-            performanceModel.Series.Add(notAnsweredSeriesCat);
-            PerformanceChart.Model = performanceModel;
-
-            // Grafico percentuale corrette per difficoltà
-            var diffModel = new PlotModel { Title = "Percentuale Corrette per Difficoltà" };
-            var diffAxis = new CategoryAxis { Position = AxisPosition.Bottom };
-            var diffValueAxis = new LinearAxis { Position = AxisPosition.Left, Minimum = 0, Maximum = 100 };
-            diffModel.Axes.Add(diffAxis);
-            diffModel.Axes.Add(diffValueAxis);
-
-            var diffSeries = new ColumnSeries { Title = "% Corrette" };
-
-            var byDiff = _stats.StatsPerCategoriaDifficolta
-                .GroupBy(s => s.Difficolta)
-                .Select(g => new
-                {
-                    Difficolta = g.Key,
-                    Corrette = g.Sum(s => s.Corrette),
-                    Totali = g.Sum(s => s.Corrette + s.Sbagliate + s.NonDate)
-                });
-
-            foreach (var stat in byDiff)
-            {
-                diffAxis.Labels.Add(stat.Difficolta);
-                double perc = stat.Totali > 0 ? (double)stat.Corrette / stat.Totali * 100.0 : 0;
-                diffSeries.Items.Add(new ColumnItem(perc));
-            }
-
-            diffModel.Series.Add(diffSeries);
-            DifficultyChart.Model = diffModel;
-
-            // Imposta i dati per il grafico temporale
-            var timelineData = _stats.AndamentoTemporale;
-            var plotModel = new PlotModel { Title = "Andamento Temporale" };
-
-            var dateAxis = new DateTimeAxis
+            // Asse X con le difficoltà
+            model.Axes.Add(new CategoryAxis
             {
                 Position = AxisPosition.Bottom,
-                StringFormat = "dd/MM",
-                IntervalType = DateTimeIntervalType.Days,
-                MinorIntervalType = DateTimeIntervalType.Days,
-                MajorGridlineStyle = LineStyle.Solid,
-                MinorGridlineStyle = LineStyle.Dot
-            };
+                Key = "DifficoltaAxis",
+                ItemsSource = difficulties,
+                LabelField = null
+            });
 
-            var valueAxisTime = new LinearAxis
+            // Asse Y
+            model.Axes.Add(new LinearAxis
             {
                 Position = AxisPosition.Left,
-                MinimumPadding = 0,
-                AbsoluteMinimum = 0
+                Title = "Numero Risposte",
+                Minimum = 0,
+                MajorStep = 2,
+                MinorStep = 1,
+                StringFormat = "0" // Mostra solo numeri interi
+            });
+
+            // Aggiungi le serie 
+            model.Series.Add(corretteSeries);
+            model.Series.Add(sbagliateSeries);
+            model.Series.Add(nonDateSeries);
+
+            StatsPerCategoriaDifficoltaChart.Model = model;
+            
+        }
+
+        private void ShowPercentualiTotaliChart(double perc_corrette, double perc_sbagliate, double perc_non_date, OxyPlot.Wpf.PlotView plotView)
+        {
+            var pieModel = new PlotModel { Title = "Percentuali Totali Risposte" };
+
+            var pieSeries = new PieSeries
+            {
+                StrokeThickness = 1.0,
+                InsideLabelPosition = 0.8,
+                AngleSpan = 360,
+                StartAngle = 0
             };
 
-            plotModel.Axes.Add(dateAxis);
-            plotModel.Axes.Add(valueAxisTime);
-
-            var correctSeries = new LineSeries { Title = "Corrette", MarkerType = MarkerType.Circle };
-            var wrongSeries = new LineSeries { Title = "Sbagliate", MarkerType = MarkerType.Circle };
-            var notAnsweredSeries = new LineSeries { Title = "Non Date", MarkerType = MarkerType.Circle };
-
-            foreach (var record in timelineData)
+            pieSeries.Slices.Add(new PieSlice("Corrette", perc_corrette)
             {
-                var x = DateTimeAxis.ToDouble(record.Date);
-                correctSeries.Points.Add(new DataPoint(x, record.Corrette));
-                wrongSeries.Points.Add(new DataPoint(x, record.Sbagliate));
-                notAnsweredSeries.Points.Add(new DataPoint(x, record.NonDate));
+                Fill = OxyColors.SeaGreen
+            });
+            pieSeries.Slices.Add(new PieSlice("Sbagliate", perc_sbagliate)
+            {
+                Fill = OxyColors.IndianRed
+            });
+            pieSeries.Slices.Add(new PieSlice("Non Date", perc_non_date)
+            {
+                Fill = OxyColors.SteelBlue
+            });
+
+            pieModel.Series.Add(pieSeries);
+
+            plotView.Model = pieModel;
+        }
+
+        private void ShowAndamentoTemporaleChart()
+        {
+            if (_stats?.AndamentoTemporale == null || !_stats.AndamentoTemporale.Any())
+                return;
+
+            var model = new PlotModel { Title = "Andamento temporale per difficoltà" };
+
+            // Asse X: Date
+            model.Axes.Add(new DateTimeAxis
+            {
+                Position = AxisPosition.Bottom,
+                StringFormat = "dd/MM/yyyy",
+                Title = "Data Quiz",
+                IntervalType = DateTimeIntervalType.Days,
+                MinorIntervalType = DateTimeIntervalType.Days,
+                IsZoomEnabled = true,
+                IsPanEnabled = true
+            });
+
+            // Asse Y: Percentuale corrette
+            model.Axes.Add(new LinearAxis
+            {
+                Position = AxisPosition.Left,
+                Title = "Percentuale Risposte Corrette",
+                Minimum = 0,
+                MajorStep = 10,
+                Maximum = 110,
+                StringFormat = "0'%'"
+            });
+
+            // Colori per difficoltà
+            var colorMap = new Dictionary<string, OxyColor>
+    {
+        { "Facile", OxyColors.SeaGreen },
+        { "Intermedia", OxyColors.SteelBlue },
+        { "Difficile", OxyColors.IndianRed }
+    };
+
+            var difficoltaPresenti = _stats.AndamentoTemporale
+                .Select(t => t.Difficolta)
+                .Distinct();
+
+            foreach (var difficolta in difficoltaPresenti)
+            {
+                var punti = _stats.AndamentoTemporale
+                    .Where(t => t.Difficolta == difficolta && t.TotaleQuesiti > 0)
+                    .OrderBy(t => t.DataQuiz)
+                    .ToList();
+
+                if (!punti.Any())
+                    continue;
+
+                if (punti.Count == 1)
+                {
+                    // Usa ScatterSeries se solo 1 punto
+                    var scatter = new ScatterSeries
+                    {
+                        Title = difficolta,
+                        MarkerType = MarkerType.Circle,
+                        MarkerSize = 6,
+                        MarkerFill = colorMap.ContainsKey(difficolta) ? colorMap[difficolta] : OxyColors.Gray
+                    };
+
+                    var p = punti.First();
+                    double y = (p.Corrette * 100.0) / p.TotaleQuesiti;
+                    scatter.Points.Add(new ScatterPoint(DateTimeAxis.ToDouble(p.DataQuiz.ToLocalTime()), y));
+
+                    model.Series.Add(scatter);
+                }
+                else
+                {
+                    // Usa LineSeries se più punti
+                    var lineSeries = new LineSeries
+                    {
+                        Title = difficolta,
+                        Color = colorMap.ContainsKey(difficolta) ? colorMap[difficolta] : OxyColors.Gray,
+                        StrokeThickness = 2,
+                        MarkerType = MarkerType.Circle,
+                        MarkerSize = 5,
+                        CanTrackerInterpolatePoints = false,
+                        MarkerStroke = OxyColors.Black,
+                        MarkerFill = colorMap.ContainsKey(difficolta) ? colorMap[difficolta] : OxyColors.Gray,
+                        LineStyle = LineStyle.Solid
+                    };
+
+                    foreach (var punto in punti)
+                    {
+                        double percentualeCorrette = (punto.Corrette * 100.0) / punto.TotaleQuesiti;
+                        var dataX = DateTimeAxis.ToDouble(punto.DataQuiz.ToLocalTime());
+                        lineSeries.Points.Add(new DataPoint(dataX, percentualeCorrette));
+                    }
+
+                    model.Series.Add(lineSeries);
+                }
             }
 
-            plotModel.Series.Add(correctSeries);
-            plotModel.Series.Add(wrongSeries);
-            plotModel.Series.Add(notAnsweredSeries);
+            StudentTimelineChart.Model = model;
+        }
 
-            StudentTimelineChart.Model = plotModel;
+        private void ShowUserCategoriesChart(List<PunteggioCategoria> punteggiPerCategoria)
+        {
+            if (punteggiPerCategoria == null || !punteggiPerCategoria.Any())
+                return;
+
+            var model = new PlotModel { Title = "Risposte per Categoria" };
+
+            // Asse X: nomi delle categorie (nome + docente)
+            var categoryLabels = punteggiPerCategoria
+                .Select(p => $"{p.CategoriaNome} ({p.DocenteUsername})")
+                .ToList();
+
+            var categoryAxis = new CategoryAxis
+            {
+                Position = AxisPosition.Bottom,
+                ItemsSource = categoryLabels,
+                GapWidth = 0.5,
+                Angle = 20
+            };
+            model.Axes.Add(categoryAxis);
+
+            // Asse Y: numero risposte
+            model.Axes.Add(new LinearAxis
+            {
+                Position = AxisPosition.Left,
+                Title = "Numero Risposte",
+                Minimum = 0,
+                MajorStep = 1,
+                MinorStep = 1,
+                StringFormat = "0"
+            });
+
+            // Serie stacked per Corrette, Sbagliate, Non Date
+            var corretteSeries = new ColumnSeries
+            {
+                Title = "Corrette",
+                FillColor = OxyColors.SeaGreen,
+                IsStacked = true,
+                LabelPlacement = LabelPlacement.Middle,
+                LabelFormatString = "{0}"
+            };
+            var sbagliateSeries = new ColumnSeries
+            {
+                Title = "Sbagliate",
+                FillColor = OxyColors.IndianRed,
+                IsStacked = true,
+                LabelPlacement = LabelPlacement.Middle,
+                LabelFormatString = "{0}"
+            };
+            var nonDateSeries = new ColumnSeries
+            {
+                Title = "Non Date",
+                FillColor = OxyColors.SteelBlue,
+                IsStacked = true,
+                LabelPlacement = LabelPlacement.Middle,
+                LabelFormatString = "{0}"
+            };
+
+            foreach (var p in punteggiPerCategoria)
+            {
+                corretteSeries.Items.Add(new ColumnItem(p.Corrette));
+                sbagliateSeries.Items.Add(new ColumnItem(p.Sbagliate));
+                nonDateSeries.Items.Add(new ColumnItem(p.NonDate));
+            }
+
+            model.Series.Add(corretteSeries);
+            model.Series.Add(sbagliateSeries);
+            model.Series.Add(nonDateSeries);
+
+            // Associa il modello al controllo OxyPlot (deve esistere in XAML)
+            PunteggiPerCategoriaChart.Model = model;
         }
 
         private void InfoButton_Click(object sender, RoutedEventArgs e)
         {
             InfoPanel.Visibility = Visibility.Visible;
-            PerformancePanel.Visibility = Visibility.Collapsed;
-            TimelinePanel.Visibility = Visibility.Collapsed;
+            StatsPanel.Visibility = Visibility.Collapsed;
+            GeneralStatsPanel.Visibility = Visibility.Collapsed;
+
         }
 
-        private void PerformanceButton_Click(object sender, RoutedEventArgs e)
+        private void StatsPerCategoryButton_Click(object sender, RoutedEventArgs e)
         {
             InfoPanel.Visibility = Visibility.Collapsed;
-            PerformancePanel.Visibility = Visibility.Visible;
-            TimelinePanel.Visibility = Visibility.Collapsed;
+            StatsPanel.Visibility = Visibility.Visible;
+            GeneralStatsPanel.Visibility = Visibility.Collapsed;
+
         }
 
-        private void TimelineButton_Click(object sender, RoutedEventArgs e)
+        private void GeneralStatsButton_Click(object sender, RoutedEventArgs e)
         {
             InfoPanel.Visibility = Visibility.Collapsed;
-            PerformancePanel.Visibility = Visibility.Collapsed;
-            TimelinePanel.Visibility = Visibility.Visible;
+            StatsPanel.Visibility = Visibility.Collapsed;
+            GeneralStatsPanel.Visibility = Visibility.Visible;
         }
+
+        private void ChooseCategories_Click(object sender, RoutedEventArgs e) {
+            var selettore = new CategorySelectionWindow(_jwtToken, true);
+            if (selettore.ShowDialog() == true && selettore.Selezionate != null)
+            {
+                _categorieSelezionate = selettore.Selezionate;
+                SelectedCategoriesBox.Text = string.Join(", ", _categorieSelezionate.Select(c => c.Nome));
+                LoadStatsPerCategory(); // Ritira le statistiche per le categorie selezionate
+            }
+            else
+            {
+                SelectedCategoriesBox.Text = string.Empty;
+            }
+        }
+
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (NavigationService != null && NavigationService.CanGoBack)
+            {
+                NavigationService.GoBack();
+            }
+            else
+            {
+                // Opzionale: gestisci il caso in cui non sia possibile tornare indietro
+                MessageBox.Show("Nessuna pagina precedente disponibile.");
+            }
+        }
+        
     }
 
-    public class TimelineData
-    {
-        public DateTime Date { get; set; }
-        public int Corrette { get; set; }
-        public int Sbagliate { get; set; }
-        public int NonDate { get; set; }
-    }
+
 }

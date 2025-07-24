@@ -1,4 +1,4 @@
-module AP_project/categorie_service
+module AP_project/CRUD_service
 
 go 1.24.3
 
