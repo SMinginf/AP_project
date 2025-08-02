@@ -11,10 +11,11 @@
     <!-- Avoid duplicate assembly info attributes during cross-platform builds -->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <SupportedOSPlatform>Windows</SupportedOSPlatform>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OxyPlot.Wpf" Version="1.0.0" />
+    <PackageReference Include="OxyPlot.Wpf" Version="2.2.0" />
   </ItemGroup>
 
 </Project>

@@ -5,6 +5,7 @@ import (
 	"AP_project/CRUD_service/models"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,6 +25,22 @@ func GetCategoriePubbliche(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, categorie)
 }
+
+func GetCategoriePubblicheByDocente(c *gin.Context) {
+	idDocente := c.Param("id_docente")
+	if idDocente == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID del docente mancante"})
+		return
+	}
+	var categorie []models.Categoria
+	if err := database.DB.Where("id_docente = ? AND pubblica = ?", idDocente, true).Find(&categorie).Error; err != nil {
+		fmt.Println("Errore nel recupero delle categorie pubbliche per il docente:", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nel recupero delle categorie pubbliche per il docente"})
+		return
+	}
+	c.JSON(http.StatusOK, categorie)
+}
+
 func CreateCategoria(c *gin.Context) {
 	ruolo, exists := c.Get("ruolo")
 	if !exists || ruolo != "Docente" {
@@ -36,6 +53,10 @@ func CreateCategoria(c *gin.Context) {
 		return
 	}
 	if err := database.DB.Create(&categoria).Error; err != nil {
+		if strings.Contains(err.Error(), "1062") { // Codice errore MySQL per chiave duplicata
+			c.JSON(http.StatusConflict, gin.H{"error": "Categoria con stesso nome e visibilità già esistente"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nella creazione della categoria"})
 		return
 	}

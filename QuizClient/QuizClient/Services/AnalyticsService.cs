@@ -25,6 +25,83 @@ namespace QuizClient.Services
         }
 
 
+        public async Task<ServiceResult<TeacherGeneralStats>> GetTeacherGeneralStatsAsync()
+        { 
+            try
+            {
+                var id_docente = JwtUtils.GetClaimAsUInt(_jwtToken, "user_id");
+                var response = await _client.GetAsync($"/stats/teacher/{id_docente}/general");
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<TeacherGeneralStats>();
+                    return new ServiceResult<TeacherGeneralStats> { Data = data };
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    string? errorMsg = $"Errore HTTP {response.StatusCode}";
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(error);
+                        if (doc.RootElement.TryGetProperty("detail", out var errorProp))
+                            errorMsg = errorProp.GetString() ?? errorMsg;
+                    }
+                    catch { }
+                    return new ServiceResult<TeacherGeneralStats> { ErrorMessage = errorMsg };
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ServiceResult<TeacherGeneralStats> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<TeacherGeneralStats> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
+            }
+
+        }
+
+
+        public async Task<ServiceResult<TeacherCategoryStatsResponse>> GetTeacherStatsPerCategoryAsync(List<uint> categoria_ids) {
+
+            try
+            {
+                var id_docente = JwtUtils.GetClaimAsUInt(_jwtToken, "user_id");
+                // Unisci gli ID in una stringa separata da virgole
+                var idsQuery = string.Join(",", categoria_ids);
+                var url = $"/stats/teacher/{id_docente}?categoria_ids={idsQuery}";
+                var response = await _client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<TeacherCategoryStatsResponse>();
+                    return new ServiceResult<TeacherCategoryStatsResponse> { Data = data };
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    string? errorMsg = $"Errore HTTP {response.StatusCode}";
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(error);
+                        if (doc.RootElement.TryGetProperty("detail", out var errorProp))
+                            errorMsg = errorProp.GetString() ?? errorMsg;
+                    }
+                    catch { }
+                    return new ServiceResult<TeacherCategoryStatsResponse> { ErrorMessage = errorMsg };
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ServiceResult<TeacherCategoryStatsResponse> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<TeacherCategoryStatsResponse> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
+            }
+
+
+        }
+        
         public async Task<ServiceResult<StudentGeneralStats>> GetStudentGeneralStatsAsync()
         {
             try

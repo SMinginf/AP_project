@@ -15,6 +15,7 @@ func SetupRoutes(r *gin.Engine) {
 	CategoriesRouter.Use(utils.AuthMiddleware())
 
 	CategoriesRouter.GET("/pubbliche", handlers.GetCategoriePubbliche)
+	CategoriesRouter.GET("/pubbliche/docente/:id_docente", handlers.GetCategoriePubblicheByDocente)
 	CategoriesRouter.GET("/studente/:id_studente", handlers.GetCategorieByStudente)
 	CategoriesRouter.POST("/create", handlers.CreateCategoria)
 	CategoriesRouter.PUT("/update", handlers.UpdateCategoria)

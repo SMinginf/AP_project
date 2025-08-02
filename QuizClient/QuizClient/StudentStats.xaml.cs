@@ -74,6 +74,18 @@ namespace QuizClient
                 return;
             }
             var generalStats = result.Data;
+
+            // Debug: stampa i dati delle categorie su Output
+            if (generalStats.PunteggiPerCategoria != null)
+            {
+                foreach (var p in generalStats.PunteggiPerCategoria)
+                {
+                    System.Diagnostics.Debug.WriteLine(
+                        $"Categoria: {p.CategoriaNome}, Docente: {p.DocenteUsername}, Corrette: {p.Corrette}, Sbagliate: {p.Sbagliate}, NonDate: {p.NonDate}");
+                }
+            }
+
+            
             // Popola le statistiche generali
             GeneralStatsTextBlock.Text = $"L'utente ha svolto {generalStats.QuizCompletati} quiz in totale.\n" +
                 $"La categoria in cui è più forte è {generalStats.CategoriaPiuForte?.CategoriaNome}({generalStats.CategoriaPiuForte?.DocenteUsername}) " +
@@ -82,6 +94,7 @@ namespace QuizClient
                 $"con il {generalStats.CategoriaPiuDebole?.PercCorrette}% di risposte corrette su un totale di {generalStats.CategoriaPiuDebole?.TotaleQuesiti} quesiti.";
 
             ShowPercentualiTotaliChart(generalStats.StatisticheGenerali.PercCorrette, generalStats.StatisticheGenerali.PercSbagliate, generalStats.StatisticheGenerali.PercNonDate, GeneralStatsPieChart);
+            
             ShowUserCategoriesChart(generalStats.PunteggiPerCategoria);
             
         }
@@ -108,10 +121,8 @@ namespace QuizClient
             ShowPercentualiTotaliChart(_stats.PercentualiTotali.PercCorrette, _stats.PercentualiTotali.PercSbagliate, _stats.PercentualiTotali.PercNonDate, PercentualiTotaliPieChart);
             ShowAndamentoTemporaleChart();
         }
-
         private void ShowStatsPerCategoriaChart()
         {
-
             if (_stats == null || _stats.StatsPerCategoriaDifficolta == null || !_stats.StatsPerCategoriaDifficolta.Any())
                 return;
 
@@ -120,61 +131,61 @@ namespace QuizClient
                 .Distinct()
                 .ToList();
 
-            // Serie per ogni tipo di risposta
-            var corretteSeries = new ColumnSeries
+            var corretteSeries = new BarSeries
             {
                 Title = "Corrette",
-                FillColor = OxyColors.SeaGreen
-            };
-            var sbagliateSeries = new ColumnSeries
-            {
-                Title = "Sbagliate",
-                FillColor = OxyColors.IndianRed
-            };
-            var nonDateSeries = new ColumnSeries
-            {
-                Title = "Non Date",
-                FillColor = OxyColors.SteelBlue
+                FillColor = OxyColors.SeaGreen,
+                LabelPlacement = LabelPlacement.Middle,
+                LabelFormatString = "{0}"
             };
 
-            // Raggruppa per difficoltà
+            var sbagliateSeries = new BarSeries
+            {
+                Title = "Sbagliate",
+                FillColor = OxyColors.IndianRed,
+                LabelPlacement = LabelPlacement.Middle,
+                LabelFormatString = "{0}"
+            };
+
+            var nonDateSeries = new BarSeries
+            {
+                Title = "Non Date",
+                FillColor = OxyColors.SteelBlue,
+                LabelPlacement = LabelPlacement.Middle,
+                LabelFormatString = "{0}"
+            };
+
             foreach (var diff in difficulties)
             {
                 var stat = _stats.StatsPerCategoriaDifficolta.FirstOrDefault(s => s.Difficolta == diff);
-                corretteSeries.Items.Add(new ColumnItem(stat?.Corrette ?? 0));
-                sbagliateSeries.Items.Add(new ColumnItem(stat?.Sbagliate ?? 0));
-                nonDateSeries.Items.Add(new ColumnItem(stat?.NonDate ?? 0));
+                corretteSeries.Items.Add(new BarItem { Value = stat?.Corrette ?? 0 });
+                sbagliateSeries.Items.Add(new BarItem { Value = stat?.Sbagliate ?? 0 });
+                nonDateSeries.Items.Add(new BarItem { Value = stat?.NonDate ?? 0 });
             }
 
             var model = new PlotModel { Title = "Risposte per Difficoltà" };
 
-            // Asse X con le difficoltà
             model.Axes.Add(new CategoryAxis
             {
-                Position = AxisPosition.Bottom,
-                Key = "DifficoltaAxis",
-                ItemsSource = difficulties,
-                LabelField = null
+                Position = AxisPosition.Left, // ← invertito per BarSeries
+                ItemsSource = difficulties
             });
 
-            // Asse Y
             model.Axes.Add(new LinearAxis
             {
-                Position = AxisPosition.Left,
+                Position = AxisPosition.Bottom,
                 Title = "Numero Risposte",
                 Minimum = 0,
                 MajorStep = 2,
                 MinorStep = 1,
-                StringFormat = "0" // Mostra solo numeri interi
+                StringFormat = "0"
             });
 
-            // Aggiungi le serie 
             model.Series.Add(corretteSeries);
             model.Series.Add(sbagliateSeries);
             model.Series.Add(nonDateSeries);
 
             StatsPerCategoriaDifficoltaChart.Model = model;
-            
         }
 
         private void ShowPercentualiTotaliChart(double perc_corrette, double perc_sbagliate, double perc_non_date, OxyPlot.Wpf.PlotView plotView)
@@ -306,31 +317,58 @@ namespace QuizClient
             StudentTimelineChart.Model = model;
         }
 
-        private void ShowUserCategoriesChart(List<PunteggioCategoria> punteggiPerCategoria)
+        private void ShowUserCategoriesChart(List<PunteggioCategoria>? punteggiPerCategoria)
         {
             if (punteggiPerCategoria == null || !punteggiPerCategoria.Any())
                 return;
 
             var model = new PlotModel { Title = "Risposte per Categoria" };
 
-            // Asse X: nomi delle categorie (nome + docente)
             var categoryLabels = punteggiPerCategoria
                 .Select(p => $"{p.CategoriaNome} ({p.DocenteUsername})")
                 .ToList();
 
-            var categoryAxis = new CategoryAxis
+            var corretteSeries = new BarSeries
             {
-                Position = AxisPosition.Bottom,
-                ItemsSource = categoryLabels,
-                GapWidth = 0.5,
-                Angle = 20
+                Title = "Corrette",
+                FillColor = OxyColors.SeaGreen,
+                LabelPlacement = LabelPlacement.Middle,
+                LabelFormatString = "{0}"
             };
-            model.Axes.Add(categoryAxis);
 
-            // Asse Y: numero risposte
+            var sbagliateSeries = new BarSeries
+            {
+                Title = "Sbagliate",
+                FillColor = OxyColors.IndianRed,
+                LabelPlacement = LabelPlacement.Middle,
+                LabelFormatString = "{0}"
+            };
+
+            var nonDateSeries = new BarSeries
+            {
+                Title = "Non Date",
+                FillColor = OxyColors.SteelBlue,
+                LabelPlacement = LabelPlacement.Middle,
+                LabelFormatString = "{0}"
+            };
+
+            foreach (var p in punteggiPerCategoria)
+            {
+                corretteSeries.Items.Add(new BarItem { Value = p.Corrette });
+                sbagliateSeries.Items.Add(new BarItem { Value = p.Sbagliate });
+                nonDateSeries.Items.Add(new BarItem { Value = p.NonDate });
+            }
+
+            model.Axes.Add(new CategoryAxis
+            {
+                Position = AxisPosition.Left, // ← categorie sul lato sinistro per BarSeries
+                ItemsSource = categoryLabels,
+                GapWidth = 0.5
+            });
+
             model.Axes.Add(new LinearAxis
             {
-                Position = AxisPosition.Left,
+                Position = AxisPosition.Bottom,
                 Title = "Numero Risposte",
                 Minimum = 0,
                 MajorStep = 1,
@@ -338,44 +376,10 @@ namespace QuizClient
                 StringFormat = "0"
             });
 
-            // Serie stacked per Corrette, Sbagliate, Non Date
-            var corretteSeries = new ColumnSeries
-            {
-                Title = "Corrette",
-                FillColor = OxyColors.SeaGreen,
-                IsStacked = true,
-                LabelPlacement = LabelPlacement.Middle,
-                LabelFormatString = "{0}"
-            };
-            var sbagliateSeries = new ColumnSeries
-            {
-                Title = "Sbagliate",
-                FillColor = OxyColors.IndianRed,
-                IsStacked = true,
-                LabelPlacement = LabelPlacement.Middle,
-                LabelFormatString = "{0}"
-            };
-            var nonDateSeries = new ColumnSeries
-            {
-                Title = "Non Date",
-                FillColor = OxyColors.SteelBlue,
-                IsStacked = true,
-                LabelPlacement = LabelPlacement.Middle,
-                LabelFormatString = "{0}"
-            };
-
-            foreach (var p in punteggiPerCategoria)
-            {
-                corretteSeries.Items.Add(new ColumnItem(p.Corrette));
-                sbagliateSeries.Items.Add(new ColumnItem(p.Sbagliate));
-                nonDateSeries.Items.Add(new ColumnItem(p.NonDate));
-            }
-
             model.Series.Add(corretteSeries);
             model.Series.Add(sbagliateSeries);
             model.Series.Add(nonDateSeries);
 
-            // Associa il modello al controllo OxyPlot (deve esistere in XAML)
             PunteggiPerCategoriaChart.Model = model;
         }
 

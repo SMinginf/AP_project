@@ -39,7 +39,7 @@ namespace QuizClient
             Utils.JwtUtils.ValidateDocenteRole(_jwtToken, this.NavigationService, this);
 
 
-            CategorieGrid.ItemsSource = Categorie;
+            CategoryListView.ItemsSource = Categorie;
             _crudService = new CRUDService(_jwtToken); // Inizializza il servizio CRUD con il token JWT
             CaricaCategorie();
         }
@@ -129,14 +129,14 @@ namespace QuizClient
             }
         }
 
-        private async void CategorieGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private async void CategoryListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             // Verifica che il doppio click sia su una riga e non sull'header
-            var row = ItemsControl.ContainerFromElement(CategorieGrid, e.OriginalSource as DependencyObject) as DataGridRow;
-            if (row == null)
+            var listViewItem = ItemsControl.ContainerFromElement(CategoryListView, e.OriginalSource as DependencyObject) as ListViewItem;
+            if (listViewItem == null)
                 return;
 
-            if (row.Item is Categoria selezionata)
+            if (listViewItem.DataContext is Categoria selezionata)
             {
                 var finestra = new CategoryDialogWindow(selezionata, _jwtToken);
                 if (finestra.ShowDialog() == true)
@@ -223,9 +223,6 @@ namespace QuizClient
                 {
                     cat.Selezionata = seleziona;
                 }
-
-                // Aggiorna la DataGrid (notifica il binding)
-                CategorieGrid.Items.Refresh();
             }
         }
     }
