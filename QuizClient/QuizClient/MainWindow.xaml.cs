@@ -7,7 +7,7 @@ namespace QuizClient
         public MainWindow()
         {
             InitializeComponent();
-            MainFrame.Navigate(new LoginPage(MainFrame));
+            MainFrame.Navigate(new LoginPage());
         }
     }
 }

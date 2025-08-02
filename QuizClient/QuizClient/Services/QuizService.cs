@@ -75,7 +75,7 @@ namespace QuizClient.Services
 
             try
             {
-                // Prelevo l'id dll'utente dal token JWT
+                // Prelevo l'id dell'utente dal token JWT
                 uint id_utente = JwtUtils.GetClaimAsUInt(_jwtToken, "user_id");
 
                 // Preparo la lista di id dei quesiti del quiz (non serve inviare al server l'oggetto Quesito completo, ma solo gli ID)

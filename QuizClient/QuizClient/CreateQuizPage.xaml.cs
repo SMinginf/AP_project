@@ -2,33 +2,25 @@
 using System.Windows;
 using System.Windows.Controls;
 using QuizClient.Models;
-using QuizClient;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Data;
-using System.Globalization;
 using QuizClient.Utils;
 
 namespace QuizClient
 {
     public partial class CreateQuizPage : Page
     {
-        private Frame _mainFrame;
-        private string _jwtToken;
-
-        private List<Categoria> _categorieSelezionate = new List<Categoria>();
-        private bool _unione = false; // Indica se le categorie selezionate devono essere unite o intersecate
-
+        private readonly string _jwtToken;
         private readonly QuizService _quizService;
 
+        private List<Categoria> _categorieSelezionate = new();
+        private bool _unione = false; // Indica se le categorie selezionate devono essere unite o intersecate
 
-        public CreateQuizPage(Frame mainFrame, string jwtToken)
+        public CreateQuizPage(string jwtToken)
         {
             InitializeComponent();
-            _mainFrame = mainFrame;
             _jwtToken = jwtToken;
             _quizService = new QuizService(jwtToken);
-            
         }
 
         private async void CreateQuiz_Click(object sender, RoutedEventArgs e)
@@ -56,7 +48,7 @@ namespace QuizClient
                 if (result != null && result.Success && result.Data != null)
                 {
                     MessageBox.Show("Quiz creato con successo!");
-                    _mainFrame.Navigate(new QuizPage(result.Data, _jwtToken));
+                    NavigationService?.Navigate(new QuizPage(result.Data, _jwtToken));
                 }
                 else
                 {
@@ -73,7 +65,8 @@ namespace QuizClient
         {
             bool isAI = AIGeneratedYes.IsChecked == true;
 
-            if (CategorieSelezionateLabel == null || CategoryBox == null) {
+            if (CategorieSelezionateLabel == null || CategoryBox == null)
+            {
                 return;
             }
 
@@ -99,7 +92,8 @@ namespace QuizClient
 
         private void Back_Click(object sender, RoutedEventArgs e)
         {
-            _mainFrame.GoBack();
+            if (NavigationService?.CanGoBack == true)
+                NavigationService.GoBack();
         }
 
         private void ApriSelezioneCategorie_Click(object sender, RoutedEventArgs e)

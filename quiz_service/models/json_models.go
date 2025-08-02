@@ -40,10 +40,9 @@ type StoreQuizInput struct {
 	Quantita          int    `json:"quantita" binding:"required,min=3"`
 	IdUtente          uint   `json:"id_utente" binding:"required"`
 	IdQuesiti         []uint `json:"id_quesiti" binding:"required"`
-	RisposteCorrette  int    `json:"corrette" binding:"required"`
-	RisposteSbagliate int    `json:"sbagliate" binding:"required"`
+	RisposteCorrette  int    `json:"corrette" binding:"required,gte=0"` // binding:"required" da solo non accetta 0 come valore valido per un campo numerico, gte=0 (greater than or equal to 0) lo fa esplicitamente
+	RisposteSbagliate int    `json:"sbagliate" binding:"required,gte=0"`
 	Durata            string `json:"durata" binding:"required"`
-	DataCreazione     string `json:"data_creazione" binding:"required"` // formato: "YYYY-MM-DD HH:MM:SS"
-	// Una risposta può essere nulla, quindi uso un puntatore a int
-	Risposte []*int `json:"risposte_utente" binding:"required"`
+	DataCreazione     string `json:"data_creazione" binding:"required"`  // formato: "YYYY-MM-DD HH:MM:SS"
+	Risposte          []*int `json:"risposte_utente" binding:"required"` // può essere nil se l'utente non ha risposto
 }

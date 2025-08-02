@@ -1,11 +1,12 @@
 ﻿using QuizClient.Models;
 using QuizClient.Services;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
 using QuizClient.Utils;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace QuizClient
 {
@@ -17,15 +18,27 @@ namespace QuizClient
         public bool Unione { get; set; } = false;
 
         private readonly CRUDService _CRUDService;
-        private string _jwtToken;
+        private readonly string _jwtToken;
         
         private bool IsFromStatsPage = false; // Indica se la finestra è stata aperta dalla pagina delle statistiche. Mi serve per riutilizzare la pagina cambiando qualcosina.
-
+        private string _ruolo="";
         public CategorySelectionWindow(string jwt, bool isFromStatsPage = false)
         {
             InitializeComponent();
             _jwtToken = jwt;
             _CRUDService = new CRUDService(_jwtToken);
+
+            try
+            {
+                //ricavo il ruolo dell'utente dal token JWT
+                _ruolo = JwtUtils.GetClaimAsString(_jwtToken, "ruolo");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Errore nel recupero del ruolo utente dal token JWT: {ex.Message}", "Errore JWT", MessageBoxButton.OK, MessageBoxImage.Error);
+                Close();
+                return;
+            }
 
             IsFromStatsPage = isFromStatsPage;
 
@@ -39,15 +52,43 @@ namespace QuizClient
             if (IsFromStatsPage)
             {
                 CategoryModePanel.Visibility = Visibility.Collapsed;
+
+                if (_ruolo == "Docente") //aggiungo la colonna Visibilità solo se la finestra è stata aperta dalla pagina delle statistiche docente
+                {
+                    var gridView = CategoryListView.View as GridView;
+                    if (gridView != null)
+                    {
+                        var visibilitaColumn = new GridViewColumn
+                        {
+                            Header = "Visibilità",
+                            Width = 60,
+                            CellTemplate = (DataTemplate)FindResource("VisibilitaCellTemplate"),
+                        };
+                        gridView.Columns.Add(visibilitaColumn);
+                    }
+                }
+
             }
+
+
         }
         private async void CaricaCategorie()
         {
-            ServiceResult<List<Categoria>> result;
+            ServiceResult<List<Categoria>> result = new();
 
             if (IsFromStatsPage)
-                // Se la finestra è stata aperta dalla pagina delle statistiche, mostro le categorie affrontate dallo studente
-                result = await _CRUDService.GetCategorieByStudenteAsync();
+            {        
+                if (_ruolo == "Studente")
+                {
+                    // Se la finestra è stata aperta dalla pagina delle statistiche studente, mostro le categorie affrontate dallo studente
+                    result = await _CRUDService.GetCategorieByStudenteAsync();
+                }
+                else if (_ruolo == "Docente")
+                {
+                    // Se la finestra è stata aperta dalla pagina delle statistiche docente, mostro tutte le categorie create dal docente
+                    result = await _CRUDService.GetCategorieByDocenteAsync(); //devo fare il get di tutte le categorie di un docente
+                }
+            }
             else
                 result = await _CRUDService.GetCategoriePubblicheAsync();
 

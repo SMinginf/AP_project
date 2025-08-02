@@ -158,6 +158,7 @@ func StoreQuiz(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nella memorizzazione della relazione quiz-quesito"})
 			return
 		}
+
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Quiz creato con successo", "quiz_id": quiz.ID})

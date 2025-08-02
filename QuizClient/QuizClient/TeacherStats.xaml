@@ -1,0 +1,133 @@
+﻿<Page x:Class="QuizClient.TeacherStats"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:oxy="http://oxyplot.org/wpf"
+      xmlns:local="clr-namespace:QuizClient"
+      xmlns:utils="clr-namespace=QuizClient.Utils"
+
+      mc:Ignorable="d"
+      Title="TeacherStats">
+
+
+    <Grid Background="{StaticResource AppBackgroundBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="170" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Menu laterale -->
+        <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="#DDD" BorderThickness="0,0,1,0">
+            <StackPanel Margin="10">
+                <TextBlock Text="Menù" Style="{StaticResource SectionTitle}"/>
+                <Separator Margin="0,0,0,10"/>
+                <Button Content="Account" Click="InfoButton_Click" />
+                <Button Content="Statistiche generali" Click="GeneralStatsButton_Click" />
+                <Button Click="StatsPerCategoryButton_Click">
+                    <TextBlock Text="Statistiche per categoria" TextWrapping="Wrap" TextAlignment="Center"/>
+                </Button>
+                <Button Content="Indietro" Click="BackButton_Click" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Column="1" Margin="10" VerticalScrollBarVisibility="Auto">
+        <!-- Contenuto principale -->
+            <StackPanel Grid.Column="1" Margin="10">
+                <!-- Info Panel -->
+                <Border x:Name="InfoPanel" Style="{StaticResource CardStyle}" Visibility="Visible">
+                    <StackPanel>
+                        <TextBlock Text="Informazioni Docente" Style="{StaticResource PageTitle}"/>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Nome:" Grid.Row="0" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5" />
+                            <TextBlock x:Name="NameText" Grid.Row="0" Grid.Column="1" />
+                            <TextBlock Text="Cognome:" Grid.Row="1" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5" />
+                            <TextBlock x:Name="CognomeText" Grid.Row="1" Grid.Column="1" />
+                            <TextBlock Text="Email:" Grid.Row="2" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5" />
+                            <TextBlock x:Name="EmailText" Grid.Row="2" Grid.Column="1" />
+                            <TextBlock Text="Username:" Grid.Row="3" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5" />
+                            <TextBlock x:Name="UsernameText" Grid.Row="3" Grid.Column="1" />
+                            <TextBlock Text="Data di Nascita:" Grid.Row="4" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,5" />
+                            <TextBlock x:Name="BirthDateText" Grid.Row="4" Grid.Column="1" />
+                            <TextBlock Text="Genere:" Grid.Row="5" Grid.Column="0" FontWeight="Bold" Margin="0,0,10,0" />
+                            <TextBlock x:Name="GenderText" Grid.Row="5" Grid.Column="1" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- General Stats Panel -->
+                <Border x:Name="GeneralStatsPanel" Style="{StaticResource CardStyle}" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Text="Statistiche Generali" Style="{StaticResource PageTitle}" />
+                        
+                            <WrapPanel HorizontalAlignment="Center" ItemWidth="160" Margin="20" ItemHeight="Auto">
+                                
+                                <utils:StatCard Title="Quesiti affrontati" Value="{Binding QuesitiAffrontati}" Icon="📘"/>
+                                <utils:StatCard Title="Studenti coinvolti" Value="{Binding UtentiCoinvolti}" Icon="👤"/>
+                                <utils:StatCard Title="Durata media quiz" Value="{Binding DurataMedia} min" Icon="⏱️"/> 
+                            </WrapPanel>
+                        <oxy:PlotView x:Name="TeacherGeneralStatsBarChart" Height="300" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Stats Panel -->
+                <Border x:Name="StatsPanel" Style="{StaticResource CardStyle}" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="Statistiche per categoria" Style="{StaticResource PageTitle}"/>
+                        <TextBlock Text="Seleziona una o più categorie per visualizzare le relative statistiche." Margin="0,0,0,10"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBox x:Name="SelectedCategoriesBox" IsReadOnly="True" Width="220"/>
+                            <Button Content="Scegli categorie" Width="120" Margin="8,0,0,0" Click="ChooseCategories_Click"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <StackPanel x:Name="QuizEQuesitiTotaliPanel" Margin="0,0,0,15">
+                                <TextBlock x:Name="QuizUniciText" FontSize="14" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="QuesitiTotaliText" FontSize="14"/>
+                            </StackPanel>
+
+                            <oxy:PlotView x:Name="StatsPerDifficoltaChart" Height="300" Margin="0,0,0,20"/>
+
+                            <TextBlock Text="Classifica Top 10 Studenti" Style="{StaticResource SectionTitle}" Margin="0,20,0,5"/>
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                <ListView x:Name="Top10StudentiListView" Margin="0,10,0,0" Height="300">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn Header="#" DisplayMemberBinding="{Binding Posizione}" Width="30"/>
+                                            <GridViewColumn Header="Username" DisplayMemberBinding="{Binding StudenteUsername}" Width="100"/>
+                                            <GridViewColumn Header="Corrette" DisplayMemberBinding="{Binding Corrette}" Width="70"/>
+                                            <GridViewColumn Header="Sbagliate" DisplayMemberBinding="{Binding Sbagliate}" Width="70"/>
+                                            <GridViewColumn Header="Non date" DisplayMemberBinding="{Binding NonDate}" Width="70"/>
+                                            <GridViewColumn Header="Totale" DisplayMemberBinding="{Binding TotRisposte}" Width="70"/>
+                                            <GridViewColumn Header="% Corrette" DisplayMemberBinding="{Binding PercCorrette, StringFormat={}{0:P0}}" Width="80"/>
+                                            <GridViewColumn Header="% Sbagliate" DisplayMemberBinding="{Binding PercSbagliate, StringFormat={}{0:P0}}" Width="80"/>
+                                            <GridViewColumn Header="% Non date" DisplayMemberBinding="{Binding PercNonDate, StringFormat={}{0:P0}}" Width="80"/>
+                                            <GridViewColumn Header="Punteggio" DisplayMemberBinding="{Binding Punteggio}" Width="80"/>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </ScrollViewer>
+
+                            <StackPanel x:Name="QuesitiSpecialiPanel" Margin="0,10,0,0">
+                                <TextBlock x:Name="QuesitoPiuIndovinatoText" FontSize="14" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="QuesitoPiuSbagliatoText" FontSize="14"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

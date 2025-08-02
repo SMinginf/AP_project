@@ -66,13 +66,14 @@ namespace QuizClient.Utils
             throw new InvalidOperationException($"Claim '{claimName}' non trovata o non convertibile in uint.");
         }
 
-        public static void ValidateDocenteRole(string jwt, NavigationService? navigationService, FrameworkElement frameworkElement)
+        public static string ValidateDocenteRole(string jwt, NavigationService? navigationService, FrameworkElement frameworkElement)
         {
             // Controllo ruolo utente dal JWT
             bool isDocente = false;
+            string ruolo = "";
             try
             {
-                var ruolo = JwtUtils.GetClaimAsString(jwt, "ruolo");
+                ruolo = JwtUtils.GetClaimAsString(jwt, "ruolo");
                 isDocente = ruolo == "Docente";
             }
             catch
@@ -100,8 +101,9 @@ namespace QuizClient.Utils
                 {
                     frameworkElement.IsEnabled = false;
                 }
-                return;
+                
             }
+            return ruolo;
         }
     }
 }

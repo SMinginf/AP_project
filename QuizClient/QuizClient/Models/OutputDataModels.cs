@@ -121,6 +121,12 @@ namespace QuizClient.Models
         public List<Quesito>? Quesiti { get; set; }
 
         public bool Selezionata { get; set; } // Per bind alla checkbox
+
+        public override string ToString()
+        {
+            return Nome;
+        }
+
     }
 
 
@@ -300,6 +306,171 @@ namespace QuizClient.Models
 
         [JsonPropertyName("totale_non_date")]
         public int TotaleNonDate { get; set; }
+
+        [JsonPropertyName("perc_corrette")]
+        public double PercCorrette { get; set; }
+
+        [JsonPropertyName("perc_sbagliate")]
+        public double PercSbagliate { get; set; }
+
+        [JsonPropertyName("perc_non_date")]
+        public double PercNonDate { get; set; }
+    }
+
+
+    // MODELLO PER LE STATISTICHE GENERALI DI UN DOCENTE
+    public class TeacherGeneralStats
+    {
+        [JsonPropertyName("stats_per_categoria")]
+        public List<TeacherCategoriaStats> StatsPerCategoria { get; set; } = new();
+
+        [JsonPropertyName("num_quesiti_affrontati")]
+        public int NumQuesitiAffrontati { get; set; }
+
+        [JsonPropertyName("num_utenti")]
+        public int NumUtenti { get; set; }
+
+        [JsonPropertyName("durata_media_quiz")]
+        public string DurataMediaQuiz { get; set; } = "";
+
+        [JsonPropertyName("num_quesiti_inseriti")]
+        public int NumQuesitiInseriti { get; set; }
+    }
+
+    public class TeacherCategoriaStats
+    {
+        [JsonPropertyName("categoria_nome")]
+        public string CategoriaNome { get; set; } = "";
+
+        [JsonPropertyName("visibilità")]
+        public string Visibilita { get; set; } = "";
+
+        [JsonPropertyName("corrette")]
+        public int Corrette { get; set; }
+
+        [JsonPropertyName("sbagliate")]
+        public int Sbagliate { get; set; }
+
+        [JsonPropertyName("non_date")]
+        public int NonDate { get; set; }
+
+        [JsonPropertyName("tot_quesiti")]
+        public int TotQuesiti { get; set; }
+
+        [JsonPropertyName("perc_corrette")]
+        public double PercCorrette { get; set; }
+
+        [JsonPropertyName("perc_sbagliate")]
+        public double PercSbagliate { get; set; }
+
+        [JsonPropertyName("perc_non_date")]
+        public double PercNonDate { get; set; }
+    }
+
+    // MODELLI PER LE STATISTICHE DI UN DOCENTE RELATIVE ALLE CATEGORIE SELEZIONATE
+    public class TeacherCategoryStatsResponse
+    {
+        [JsonPropertyName("categorie_filtrate")]
+        public List<int> CategorieFiltrate { get; set; } = new();
+
+        [JsonPropertyName("stats_per_difficolta")]
+        public List<DifficoltaStats> StatsPerDifficolta { get; set; } = new();
+
+        [JsonPropertyName("top_10_studenti")]
+        public List<StudentRanking> Top10Studenti { get; set; } = new();
+
+        [JsonPropertyName("quesito_piu_indovinato")]
+        public QuesitoStats? QuesitoPiuIndovinato { get; set; }
+
+        [JsonPropertyName("quesito_piu_sbagliato")]
+        public QuesitoStats? QuesitoPiuSbagliato { get; set; }
+
+        [JsonPropertyName("stats_per_quesito")]
+        public List<QuesitoStats> StatsPerQuesito { get; set; } = new();
+    }
+
+    public class DifficoltaStats
+    {
+        [JsonPropertyName("difficolta")]
+        public string Difficolta { get; set; } = "";
+
+        [JsonPropertyName("corrette")]
+        public int Corrette { get; set; }
+
+        [JsonPropertyName("sbagliate")]
+        public int Sbagliate { get; set; }
+
+        [JsonPropertyName("non_date")]
+        public int NonDate { get; set; }
+
+        [JsonPropertyName("tot_quesiti")]
+        public int TotQuesiti { get; set; }
+
+        [JsonPropertyName("perc_corrette")]
+        public double PercCorrette { get; set; }
+
+        [JsonPropertyName("perc_sbagliate")]
+        public double PercSbagliate { get; set; }
+
+        [JsonPropertyName("perc_non_date")]
+        public double PercNonDate { get; set; }
+    }
+
+    public class StudentRanking
+    {
+        [JsonPropertyName("posizione")]
+        public int Posizione { get; set; }
+
+        [JsonPropertyName("studente_username")]
+        public string StudenteUsername { get; set; } = "";
+
+        [JsonPropertyName("corrette")]
+        public int Corrette { get; set; }
+
+        [JsonPropertyName("sbagliate")]
+        public int Sbagliate { get; set; }
+
+        [JsonPropertyName("non_date")]
+        public int NonDate { get; set; }
+
+        [JsonPropertyName("tot_risposte")]
+        public int TotRisposte { get; set; }
+
+        [JsonPropertyName("perc_corrette")]
+        public double PercCorrette { get; set; }
+
+        [JsonPropertyName("perc_sbagliate")]
+        public double PercSbagliate { get; set; }
+
+        [JsonPropertyName("perc_non_date")]
+        public double PercNonDate { get; set; }
+
+        [JsonPropertyName("punteggio")]
+        public double Punteggio { get; set; }
+    }
+
+    public class QuesitoStats
+    {
+        [JsonPropertyName("quesito_id")]
+        public int QuesitoId { get; set; }
+
+        [JsonPropertyName("quesito_testo")]
+        public string QuesitoTesto { get; set; } = "";
+
+        [JsonPropertyName("difficolta")]
+        public string Difficolta { get; set; } = "";
+
+        [JsonPropertyName("corrette")]
+        public int Corrette { get; set; }
+
+        [JsonPropertyName("sbagliate")]
+        public int Sbagliate { get; set; }
+
+        [JsonPropertyName("non_date")]
+        public int NonDate { get; set; }
+
+        [JsonPropertyName("tot_risposte")]
+        public int TotRisposte { get; set; }
 
         [JsonPropertyName("perc_corrette")]
         public double PercCorrette { get; set; }
