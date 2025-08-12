@@ -39,7 +39,11 @@ namespace QuizClient
             Utils.JwtUtils.ValidateDocenteRole(_jwtToken, this.NavigationService, this);
 
 
+<<<<<<< HEAD
             CategorieGrid.ItemsSource = Categorie;
+=======
+            CategoryListView.ItemsSource = Categorie;
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
             _crudService = new CRUDService(_jwtToken); // Inizializza il servizio CRUD con il token JWT
             CaricaCategorie();
         }
@@ -68,6 +72,10 @@ namespace QuizClient
                 FiltroPrivate.IsChecked = false;
             FiltraCategorie(SearchBox?.Text ?? string.Empty);
         }
+<<<<<<< HEAD
+=======
+
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
         private void FiltroPrivata_Checked(object sender, RoutedEventArgs e)
         {
             // Se si seleziona "Solo private", deseleziona "Solo pubbliche"
@@ -81,8 +89,12 @@ namespace QuizClient
             bool soloPrivate = FiltroPrivate?.IsChecked == true;
 
             Categorie.Clear();
+<<<<<<< HEAD
             foreach (var cat in TutteLeCategorie.Where(c => 
             // string.IsNullOrWhiteSpace(filtro) = Se il testo di ricerca (filtro) è vuoto, nullo o solo spazi, questa condizione è vera per tutte le categorie (nessun filtro per nome).
+=======
+            foreach (var cat in TutteLeCategorie.Where(c => // string.IsNullOrWhiteSpace(filtro) = Se il testo di ricerca (filtro) è vuoto, nullo o solo spazi, questa condizione è vera per tutte le categorie (nessun filtro per nome).
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
                 (string.IsNullOrWhiteSpace(filtro) || c.Nome.Contains(filtro, StringComparison.OrdinalIgnoreCase)) &&
                 (
                     (!soloPubbliche && !soloPrivate) ||
@@ -107,6 +119,10 @@ namespace QuizClient
         {
             FiltraCategorie(SearchBox?.Text ?? string.Empty);
         }
+<<<<<<< HEAD
+=======
+
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
         private async void NuovaCategoria_Click(object sender, RoutedEventArgs e)
         {
             var finestra = new CategoryDialogWindow(_jwtToken);
@@ -127,6 +143,7 @@ namespace QuizClient
                 }
             }
         }
+<<<<<<< HEAD
         private async void CategorieGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             // Verifica che il doppio click sia su una riga e non sull'header
@@ -135,6 +152,17 @@ namespace QuizClient
                 return;
 
             if (row.Item is Categoria selezionata)
+=======
+
+        private async void CategoryListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            // Verifica che il doppio click sia su una riga e non sull'header
+            var listViewItem = ItemsControl.ContainerFromElement(CategoryListView, e.OriginalSource as DependencyObject) as ListViewItem;
+            if (listViewItem == null)
+                return;
+
+            if (listViewItem.DataContext is Categoria selezionata)
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
             {
                 var finestra = new CategoryDialogWindow(selezionata, _jwtToken);
                 if (finestra.ShowDialog() == true)
@@ -155,6 +183,11 @@ namespace QuizClient
                 }
             }
         }
+<<<<<<< HEAD
+=======
+
+       
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
         private async void EliminaCategorie_Click(object sender, RoutedEventArgs e)
         {
             var selezionate = TutteLeCategorie.Where(c => c.Selezionata).ToList();
@@ -200,7 +233,10 @@ namespace QuizClient
             }
         }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
         private void Back_Click(object sender, RoutedEventArgs e)
         {
             if (NavigationService != null && NavigationService.CanGoBack)
@@ -208,6 +244,10 @@ namespace QuizClient
             else
                 this.IsEnabled = false;
         }
+<<<<<<< HEAD
+=======
+
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
         private void SelezionaTutteLeCheckbox_Click(object sender, RoutedEventArgs e)
         {
             if (sender is CheckBox headerCheckBox)
@@ -219,9 +259,12 @@ namespace QuizClient
                 {
                     cat.Selezionata = seleziona;
                 }
+<<<<<<< HEAD
 
                 // Aggiorna la DataGrid (notifica il binding)
                 CategorieGrid.Items.Refresh();
+=======
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
             }
         }
     }

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 module AP_project/categorie_service
+=======
+module AP_project/CRUD_service
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 
 go 1.24.3
 

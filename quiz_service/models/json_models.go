@@ -2,6 +2,7 @@ package models
 
 // Oggetto in cui farò il parse del JSON inviato dal client per creare un quiz.
 type CreateQuizInput struct {
+<<<<<<< HEAD
 	AIGenerated bool   `json:"ai_generated"` // il tag Gin "required" per i booelani non funziona bene
 	AICategoria string `json:"ai_categoria"` // categoria da cui generare il quiz con AI
 	IdCategorie []int  `json:"id_categorie" binding:"required"`
@@ -9,6 +10,13 @@ type CreateQuizInput struct {
 	//IdCategorie     []uint `json:"id_categorie" binding:"required"`
 	Difficolta      string `json:"difficolta" binding:"required,oneof=Facile Intermedia Difficile Qualsiasi"`
 	Quantita        int    `json:"quantita" binding:"required,min=1"`
+=======
+	AIGenerated     bool   `json:"ai_generated"` // il tag Gin "required" per i booelani non funziona bene
+	AICategoria     string `json:"ai_categoria"` // categoria da cui generare il quiz con AI
+	IdCategorie     []int  `json:"id_categorie" binding:"required"`
+	Difficolta      string `json:"difficolta" binding:"required,oneof=Facile Intermedia Difficile Qualsiasi"`
+	Quantita        int    `json:"quantita" binding:"required,min=3"`
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 	UsernameDocente string `json:"username_docente"` // uso l'username per riconoscere univocamente un docente. Non uso il tag `binding:"required"` perché voglio permettere che possa essere una stringa vuota
 	Unione          bool   `json:"unione"`           // true = unione, false = intersezione
 }
@@ -17,7 +25,11 @@ type CreateQuizInput struct {
 // ovvero con quesiti prelevati dal database e non generati da AI.
 type CreateQuizOutput struct {
 	AIGenerated bool      `json:"ai_generated"` // il tag Gin "required" per i booelani non funziona bene
+<<<<<<< HEAD
 	Categoria   string    `json:"categoria"`
+=======
+	AICategoria string    `json:"ai_categoria"` // categoria da cui generare il quiz con AI
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 	Difficolta  string    `json:"difficolta"`
 	Quantita    int       `json:"quantita"`
 	Quesiti     []Quesito `json:"quesiti"`
@@ -38,6 +50,7 @@ type GroqQuiz struct {
 }
 
 type StoreQuizInput struct {
+<<<<<<< HEAD
 	Categoria         string `json:"categoria" binding:"required"`
 	Difficolta        string `json:"difficolta" binding:"required,oneof=Facile Intermedia Difficile Qualsiasi"`
 	Quantita          int    `json:"quantita" binding:"required,min=1"`
@@ -48,4 +61,15 @@ type StoreQuizInput struct {
 	Durata            string `json:"durata" binding:"required"`
 	DataCreazione     string `json:"data_creazione" binding:"required"` // formato: "YYYY-MM-DD HH:MM:SS"
 	Risposte          []int  `json:"risposte_utente" binding:"required"`
+=======
+	Difficolta        string `json:"difficolta" binding:"required,oneof=Facile Intermedia Difficile Qualsiasi"`
+	Quantita          int    `json:"quantita" binding:"required,min=3"`
+	IdUtente          uint   `json:"id_utente" binding:"required"`
+	IdQuesiti         []uint `json:"id_quesiti" binding:"required"`
+	RisposteCorrette  int    `json:"corrette" binding:"required,gte=0"` // binding:"required" da solo non accetta 0 come valore valido per un campo numerico, gte=0 (greater than or equal to 0) lo fa esplicitamente
+	RisposteSbagliate int    `json:"sbagliate" binding:"required,gte=0"`
+	Durata            string `json:"durata" binding:"required"`
+	DataCreazione     string `json:"data_creazione" binding:"required"`  // formato: "YYYY-MM-DD HH:MM:SS"
+	Risposte          []*int `json:"risposte_utente" binding:"required"` // può essere nil se l'utente non ha risposto
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 }

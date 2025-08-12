@@ -1,15 +1,27 @@
 package handlers
 
 import (
+<<<<<<< HEAD
 	"AP_project/categorie_service/database"
 	"AP_project/categorie_service/models"
 	"fmt"
 	"net/http"
+=======
+	"AP_project/CRUD_service/database"
+	"AP_project/CRUD_service/models"
+	"fmt"
+	"net/http"
+	"strings"
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 
 	"github.com/gin-gonic/gin"
 )
 
 // --- FUNZIONI CRUD PER LE CATEGORIE ---
+<<<<<<< HEAD
+=======
+
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 // Restituisco tutte le categorie pubbliche presenti nel database, popolando anche il campo Docente
 // che contiene le informazioni del docente associato a ciascuna categoria grazie al metodo Preload di GORM.
 func GetCategoriePubbliche(c *gin.Context) {
@@ -23,6 +35,25 @@ func GetCategoriePubbliche(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, categorie)
 }
+<<<<<<< HEAD
+=======
+
+func GetCategoriePubblicheByDocente(c *gin.Context) {
+	idDocente := c.Param("id_docente")
+	if idDocente == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID del docente mancante"})
+		return
+	}
+	var categorie []models.Categoria
+	if err := database.DB.Where("id_docente = ? AND pubblica = ?", idDocente, true).Find(&categorie).Error; err != nil {
+		fmt.Println("Errore nel recupero delle categorie pubbliche per il docente:", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nel recupero delle categorie pubbliche per il docente"})
+		return
+	}
+	c.JSON(http.StatusOK, categorie)
+}
+
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 func CreateCategoria(c *gin.Context) {
 	ruolo, exists := c.Get("ruolo")
 	if !exists || ruolo != "Docente" {
@@ -35,6 +66,13 @@ func CreateCategoria(c *gin.Context) {
 		return
 	}
 	if err := database.DB.Create(&categoria).Error; err != nil {
+<<<<<<< HEAD
+=======
+		if strings.Contains(err.Error(), "1062") { // Codice errore MySQL per chiave duplicata
+			c.JSON(http.StatusConflict, gin.H{"error": "Categoria con stesso nome e visibilità già esistente"})
+			return
+		}
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nella creazione della categoria"})
 		return
 	}
@@ -53,7 +91,18 @@ func UpdateCategoria(c *gin.Context) {
 		return
 	}
 
+<<<<<<< HEAD
 	if err := database.DB.Model(&models.Categoria{}).Where("id = ?", categoria.ID).Updates(categoria).Error; err != nil {
+=======
+	/*
+		GORM per default ignora i campi con valore zero (incluso false per i boolean)
+		quando usa il metodo Updates(). Questo è un comportamento standard di GORM per
+		evitare di sovrascrivere valori esistenti con valori zero non intenzionali.
+		Usando il select possiamo esplicitamente specificare quali campi vogliamo aggiornare.
+	*/
+
+	if err := database.DB.Model(&models.Categoria{}).Where("id = ?", categoria.ID).Select("nome", "tipo", "descrizione", "pubblica", "id_docente").Updates(categoria).Error; err != nil {
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nella modifica della categoria"})
 		return
 	}
@@ -97,6 +146,7 @@ func GetCategorieByDocente(c *gin.Context) {
 	c.JSON(http.StatusOK, categorie)
 }
 
+<<<<<<< HEAD
 func GetCategorieByDocenteAndNome(c *gin.Context) {
 	idDocente := c.Param("id_docente")
 	categoria := c.Query("categoria") // usato per i parametri di query (query string) come ?categoria=nome_categoria che sono opzionali e non sono posizionali
@@ -110,10 +160,43 @@ func GetCategorieByDocenteAndNome(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nel recupero delle categorie per il docente e il nome specificato"})
 		return
 	}
+=======
+func GetCategorieByStudente(c *gin.Context) {
+	idStudente := c.Param("id_studente")
+	if idStudente == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID dello studente mancante"})
+		return
+	}
+
+	var categorie []models.Categoria
+
+	// Query per recuperare le categorie dei quesiti presenti nei quiz svolti dallo studente
+	err := database.DB.
+		Table("categorie").
+		Select("DISTINCT categorie.*").
+		Joins("JOIN categoria_quesito ON categorie.id = categoria_quesito.id_categoria").
+		Joins("JOIN quesiti ON categoria_quesito.id_quesito = quesiti.id").
+		Joins("JOIN quiz_quesiti ON quesiti.id = quiz_quesiti.quesito_id").
+		Joins("JOIN quiz ON quiz_quesiti.quiz_id = quiz.id").
+		Where("quiz.id_utente = ?", idStudente).
+		Preload("Docente").
+		Find(&categorie).Error
+
+	if err != nil {
+		fmt.Println("Errore nel recupero delle categorie per lo studente:", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nel recupero delle categorie per lo studente"})
+		return
+	}
+
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 	c.JSON(http.StatusOK, categorie)
 }
 
 // --- FUNZIONI CRUD PER I QUESITI ---
+<<<<<<< HEAD
+=======
+
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 func CreateQuesito(c *gin.Context) {
 	ruolo, exists := c.Get("ruolo")
 	if !exists || ruolo != "Docente" {
@@ -173,7 +256,10 @@ func DeleteQuesito(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Quesito cancellato con successo"})
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 func GetQuesitiByDocente(c *gin.Context) {
 	idDocente := c.Param("id_docente")
 	if idDocente == "" {
@@ -181,7 +267,11 @@ func GetQuesitiByDocente(c *gin.Context) {
 		return
 	}
 	var quesiti []models.Quesito
+<<<<<<< HEAD
 	if err := database.DB.Where("id_docente = ?", idDocente).Preload("Categorie").Preload("Docente").Find(&quesiti).Error; err != nil {
+=======
+	if err := database.DB.Where("id_docente = ?", idDocente).Preload("Docente").Find(&quesiti).Error; err != nil {
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 		fmt.Println("Errore nel recupero dei quesiti per il docente:", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nel recupero dei quesiti per il docente"})
 		return
@@ -189,10 +279,16 @@ func GetQuesitiByDocente(c *gin.Context) {
 	c.JSON(http.StatusOK, quesiti)
 }
 
+<<<<<<< HEAD
 // Da controllare
 func GetQuesitiByDocenteAndCategoria(c *gin.Context) {
 	idDocente := c.Param("id_docente") // usato per i parametri dinamici definiti nella route (gerarchica e posizionale)
 	categoria := c.Query("categoria")  // usato per i parametri di query (query string) come ?categoria=nome_categoria che sono opzionali e non sono posizionali
+=======
+func GetQuesitiByDocenteAndCategoria(c *gin.Context) {
+	idDocente := c.Param("id_docente") // usato per i parametri dinamici definiti nella route
+	categoria := c.Query("categoria")  // usato per i parametri di query (query string) come ?categoria=nome_categoria
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 	if idDocente == "" || categoria == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID del docente o categoria mancante"})
 		return
@@ -206,3 +302,44 @@ func GetQuesitiByDocenteAndCategoria(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, categorie)
 }
+<<<<<<< HEAD
+=======
+
+// Funzioni CRUD per gli utenti
+func GetUtente(c *gin.Context) {
+	id := c.Param("id_utente")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID utente mancante"})
+		return
+	}
+
+	var utente models.Utente
+	if err := database.DB.First(&utente, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Utente non trovato"})
+		return
+	}
+
+	c.JSON(http.StatusOK, utente)
+}
+
+func UpdateUtente(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID utente mancante"})
+		return
+	}
+
+	var utente models.Utente
+	if err := c.ShouldBindJSON(&utente); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := database.DB.Model(&models.Utente{}).Where("id = ?", id).Updates(utente).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nella modifica dell'utente"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Utente modificato con successo"})
+}
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba

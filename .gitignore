@@ -12,3 +12,11 @@ obj/
 # OS or IDE generated
 *.DS_Store
 Thumbs.db
+<<<<<<< HEAD
+=======
+
+# Python virtual environment
+auth_service/venv
+analytics_service/venv
+TestGeneratorClient
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba

@@ -45,7 +45,11 @@ type Quesito struct {
 	OpCorretta int         `gorm:"column:op_corretta;not null" json:"op_corretta"`
 	IDDocente  uint        `gorm:"column:id_docente;not null" json:"id_docente"`
 	Docente    Utente      `gorm:"foreignKey:IDDocente;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"docente"`
+<<<<<<< HEAD
 	Categorie  []Categoria `gorm:"many2many:categoria_quesito;joinForeignKey:id_quesito;joinReferences:id_categoria;" json:"categorie,omitempty"`
+=======
+	Categorie  []Categoria `gorm:"many2many:categoria_quesito;" json:"categorie,omitempty"`
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 }
 
 func (Quesito) TableName() string {
@@ -60,7 +64,11 @@ type Categoria struct {
 	IDDocente   uint      `gorm:"column:id_docente;not null" json:"id_docente"`
 	Pubblica    bool      `gorm:"not null" json:"pubblica"`
 	Docente     Utente    `gorm:"foreignKey:IDDocente;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"docente"`
+<<<<<<< HEAD
 	Quesiti     []Quesito `gorm:"many2many:categoria_quesito;joinForeignKey:id_categoria;joinReferences:id_quesito;" json:"quesiti,omitempty"`
+=======
+	Quesiti     []Quesito `gorm:"many2many:categoria_quesito;" json:"quesiti,omitempty"`
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 }
 
 func (Categoria) TableName() string {
@@ -83,9 +91,16 @@ func (Quiz) TableName() string {
 }
 
 type QuizQuesiti struct {
+<<<<<<< HEAD
 	QuizID         uint `gorm:"column:quiz_id;primaryKey"`
 	QuesitoID      uint `gorm:"column:quesito_id;primaryKey"`
 	RispostaUtente int  `gorm:"column:risposta_utente"`
+=======
+	QuizID    uint `gorm:"column:quiz_id;primaryKey"`
+	QuesitoID uint `gorm:"column:quesito_id;primaryKey"`
+	// RispostaUtente è un campo che può essere nullo (risposta non data), quindi usiamo un puntatore a int
+	RispostaUtente *int `gorm:"column:risposta_utente"`
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 }
 
 func (QuizQuesiti) TableName() string {

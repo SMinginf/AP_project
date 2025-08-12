@@ -17,6 +17,11 @@ func main() {
 	// Inizializza le rotte
 	routes.SetupRoutes(r)
 
+<<<<<<< HEAD
 	// Avvia il server sulla porta 8083 (puoi cambiarla)
 	r.Run(":8083")
+=======
+	// Avvia il server sulla porta 8081 (puoi cambiarla)
+	r.Run(":8081")
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 }

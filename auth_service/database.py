@@ -1,6 +1,9 @@
 import os
 from sqlalchemy import create_engine
+<<<<<<< HEAD
 from sqlalchemy.ext.declarative import declarative_base
+=======
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 from sqlalchemy.orm import sessionmaker
 
 
@@ -24,9 +27,12 @@ engine = create_engine(DATABASE_URL)
 # La sessione è l’oggetto tramite cui interagisci con il database per eseguire query ecc.
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+<<<<<<< HEAD
 # Base è la classe base da cui dovranno ereditare tutti i modelli (le classi che rappresentano le tabelle).
 # Serve per usare SQLAlchemy ORM.
 Base = declarative_base()
+=======
+>>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 
 
 # Funzione generatore
