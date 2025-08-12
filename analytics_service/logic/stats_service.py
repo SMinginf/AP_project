@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from models.ORM_models import Quiz, QuizQuesito, Quesito, CategoriaQuesito, Categoria, Utente
