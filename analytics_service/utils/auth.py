@@ -1,6 +1,4 @@
 from jose import JWTError, jwt
-from datetime import datetime, timedelta, timezone
-from typing import Optional
 from fastapi import HTTPException, Header
 
 
@@ -23,17 +21,14 @@ def validate_token(authorization: str = Header(None)) -> dict:
     """
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Token non fornito o malformato")
-    
+
     # Estrae il token dall'header Authorization.
     # Se il token non inizia con "Bearer ", restituisce un errore 401.
     token = authorization.split("Bearer ")[1]
-    user_data = get_data_from_token(token)
-    if not user_data:
-        raise HTTPException(status_code=401, detail="Token non valido o scaduto")
-    return user_data
+    return get_data_from_token(token)
 
 
-def get_data_from_token(token: str) -> Optional[dict]:
+def get_data_from_token(token: str) -> dict:
     """
     Decodifica il token JWT e restituisce i dati utente.
 
@@ -51,5 +46,5 @@ def get_data_from_token(token: str) -> Optional[dict]:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except JWTError:
-        # Restituisce None se il token non è valido
-        return None
+        # Propaga un errore HTTP se il token non è valido o scaduto
+        raise HTTPException(status_code=401, detail="Token non valido o scaduto")
