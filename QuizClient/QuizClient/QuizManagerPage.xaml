@@ -1,0 +1,126 @@
+<Page x:Class="QuizClient.QuizManagerPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:utils="clr-namespace:QuizClient.Utils"
+      Title="QuizManagerPage">
+
+    <Page.Resources>
+        <utils:CategoriaToStringConverter x:Key="CategoriaToStringConverter"/>
+        <utils:OpCorrettaToStringConverter x:Key="OpCorrettaToStringConverter"/>
+    </Page.Resources>
+
+    <!--Grid sottofondo -->
+    <Grid Background="White" Height="600" Width="800" Margin="20">
+        <Grid.RowDefinitions>
+            <!-- Titolo -->
+            <RowDefinition Height="Auto"/>
+            <!-- Barra di ricerca -->
+            <RowDefinition Height="Auto" MinHeight="25"/>
+            <!--Lista quesiti da gestire-->
+            <RowDefinition Height="Auto" MinHeight="480"/>
+            <!-- Bottoni -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 📘 Titolo -->
+        <TextBlock Grid.Row= "0" Text="Gestione Quiz" FontSize="24" FontWeight="Bold" Margin="5,0,0,10"/>
+        <!-- 🔍 Campo di ricerca -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5">
+            <TextBlock Text="Cerca testo:" VerticalAlignment="Center" Margin="2,0,10,0"/>
+            <TextBox x:Name="SearchBox"
+              Margin="2,0,280,0"
+              Width="250"
+              TextChanged="SearchBox_TextChanged"
+              ToolTip="Cerca parole chiave"/>
+        </StackPanel>
+        <!-- 📋 Elenco categorie -->
+        <DataGrid x:Name="QuesitiQuizGrid" Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True" Margin="10,16,10,10"
+                    MinHeight="200" MouseDoubleClick="QuesitiQuizGrid_MouseDoubleClick" SelectionMode="Single">
+            <DataGrid.Resources>
+
+                <!-- Celle senza evidenziazione -->
+                <Style TargetType="DataGridCell">
+                    <Setter Property="Background" Value="White"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="BorderBrush" Value="LightGray"/>
+                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="White"/>
+                            <Setter Property="Foreground" Value="Black"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.Resources>
+
+            <!-- Righe senza sfondo selezione -->
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Setter Property="Background" Value="White"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="BorderBrush" Value="LightGray"/>
+
+                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="White"/>
+                            <Setter Property="Foreground" Value="Black"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#FFF5F5F5"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Width="35">
+                    <DataGridTemplateColumn.Header>
+                        <CheckBox Click="SelezionaTutteLeCheckbox_Click"/>
+                    </DataGridTemplateColumn.Header>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding Selezionato, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Testo" Width="2*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Testo}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" VerticalAlignment="Center" Height="22"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Header="A" Binding="{Binding OpzioneA}" Width="Auto"/>
+                <DataGridTextColumn Header="B" Binding="{Binding OpzioneB}" Width="Auto"/>
+                <DataGridTextColumn Header="C" Binding="{Binding OpzioneC}" Width="Auto"/>
+                <DataGridTextColumn Header="D" Binding="{Binding OpzioneD}" Width="Auto"/>
+                <DataGridTemplateColumn Header="Corretta" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding OpCorretta, Converter={StaticResource OpCorrettaToStringConverter}}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" VerticalAlignment="Center" Height="22"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Header="Difficoltà" Binding="{Binding Difficolta}" Width="*"/>
+                <DataGridTemplateColumn Header="Categorie" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Categorie,Converter={StaticResource CategoriaToStringConverter}}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" VerticalAlignment="Center" Height="22"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <!-- 🔘 Pulsanti -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="10,0,10,0" HorizontalAlignment="Left" Width="Auto" Height="50" VerticalAlignment="Center">
+            <Button Content="⬅️ Indietro" Width="80" Height="32" Margin=" 0,0,380,0" Click="Back_Click" />
+            <Button Content="Genera testo d'esame" Width="150" Height="32" Margin=" 0,0,10,0"/> <!--Click="Back_Click"--> 
+            <Button Content="Sostituisci quesiti selezionati" Width="160" Height="32" Click="Reroll_Click"/>
+        </StackPanel>
+    </Grid>
+</Page>
+            

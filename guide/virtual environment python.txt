@@ -1,0 +1,34 @@
+Passaggi per creare e usare un virtual environment python su Windows
+
+1. Spostati nella cartella del tuo microservizio auth_service
+Apri il terminale (PowerShell o CMD) e digita:
+cd percorso\della\tua\cartella\auth_service
+(es. cd C:\Users\Tuonome\Documents\quizapp\auth_service)
+
+2. Crea l’ambiente virtuale
+python -m venv venv
+Questo comando crea una cartella venv/ nella tua directory, contenente l’ambiente virtuale.
+
+3. Attiva l’ambiente virtuale
+Se stai usando PowerShell:
+.\venv\Scripts\Activate.ps1
+Se ricevi un errore tipo "execution of scripts is disabled", lancia prima:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+Se usi cmd.exe:
+venv\Scripts\activate.bat
+
+4. Installa le dipendenze necessarie
+Puoi ora installare FastAPI, SQLAlchemy, ecc. dentro l’ambiente virtuale:
+pip install fastapi uvicorn sqlalchemy pymysql python-dotenv
+Se ti servono anche strumenti per lo sviluppo (es. httpx, pytest, ecc.), puoi installarli dopo.
+
+5. (Opzionale) Congela le dipendenze in un requirements.txt così in futuro potrai installarle tutte insieme: pip freeze > requirements.txt
+E in un nuovo ambiente potrai fare: pip install -r requirements.txt
+
+6. Lancia il comando “uvicorn main:app –-reload” per avviare il server web Uvicorn. L'API sarà raggiungibile su http://localhost:8000.
+Puoi provare le API direttamente su http://localhost:8000/docs grazie alla documentazione interattiva Swagger offerta da FastAPI.
+Uvicorn è un server ASGI che permette di eseguire un’app FastAPI.
+
+
+Quando hai finito di lavorare, disattiva l’ambiente virtuale con: deactivate
+

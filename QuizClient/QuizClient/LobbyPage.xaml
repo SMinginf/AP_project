@@ -1,0 +1,18 @@
+﻿<Page x:Class="QuizClient.LobbyPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="LobbyPage">
+
+    <Grid Background="#F0F0F0">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20">
+
+            <TextBlock Text="Benvenuto nella Lobby" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,30"/>
+
+            <Button x:Name="QuizButton" Width="200" Height="40" Click="CreateQuiz_Click"/>
+            <Button Content="Gestisci categorie" x:Name="GestisciCategorieButton" Width="200" Height="40" Click="ManageCategories_Click" BorderThickness="1,1,1,1"/>
+            <Button Content="Gestisci quesiti" x:Name="GestisciQuesitiButton" Width="200" Height="40" Click="ManageQuestions_Click" BorderThickness="1,1,1,1"/>
+            <Button Content="Statistiche profilo" Width="200" Height="40" Click="ProfileStats_Click"/>
+            <Button Content="Logout" Width="200" Height="40" Background="LightCoral" Click="Logout_Click"/>
+        </StackPanel>
+    </Grid>
+</Page>
