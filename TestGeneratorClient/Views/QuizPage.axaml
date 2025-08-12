@@ -1,8 +1,0 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="TestGeneratorClient.Views.QuizPage">
-    <StackPanel Margin="40">
-        <TextBlock x:Name="TitleText" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
-        <Button Content="Torna alla lobby" Click="Back_Click" Width="200"/>
-    </StackPanel>
-</UserControl>
