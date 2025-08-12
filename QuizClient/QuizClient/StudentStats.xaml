@@ -3,6 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:oxy="clr-namespace:OxyPlot.Wpf;assembly=OxyPlot.Wpf"
       Title="StudentStats"
+       xmlns:utils="clr-namespace:QuizClient.Utils"
       Background="{StaticResource AppBackgroundBrush}">
 
     <Grid>
@@ -85,6 +86,55 @@
                         
                         <TextBlock Text="Statistiche Generali" Style="{StaticResource PageTitle}" />
                         <TextBlock x:Name="GeneralStatsTextBlock" FontSize="14" Margin="0,0,0,8" />
+
+                        <UniformGrid Columns="2" HorizontalAlignment="Center" Margin="20" IsItemsHost="False">
+                            <!-- StatCard 1 -->
+                            <utils:StatCard Title="Quiz completati" Value="{Binding QuizCompletati}" Icon="📘"/>
+
+                            <!-- StatCard 2 -->
+                            <utils:StatCard Title="Durata media quiz" Value="{Binding DurataMediaQuiz}" Icon="⏱️"/>
+
+                            <!-- StatCard 3 -->
+                            <utils:StatCard Title="Categoria migliore" Icon="⭐">
+                                <utils:StatCard.Description>
+                                    <StackPanel>
+                                        <TextBlock TextWrapping="Wrap" FontSize="12" FontWeight="Bold">
+                                            <Run Text="{Binding CategoriaPiuForte.CategoriaNome}" />
+                                            <Run Text=" (" />
+                                            <Run Text="{Binding CategoriaPiuForte.DocenteUsername}" />
+                                            <Run Text=")" />
+                                        </TextBlock>
+                                        <TextBlock FontSize="11" TextWrapping="Wrap">
+                                            <Run Text="{Binding CategoriaPiuForte.PercCorrette}" />
+                                            <Run Text="% di risposte corrette su " />
+                                            <Run Text="{Binding CategoriaPiuForte.TotaleQuesiti}" />
+                                            <Run Text=" quesiti affrontati" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </utils:StatCard.Description>
+                            </utils:StatCard>
+
+                            <!-- StatCard 4 -->
+                            <utils:StatCard Title="Categoria peggiore" Icon="⚠️">
+                                <utils:StatCard.Description>
+                                    <StackPanel>
+                                        <TextBlock TextWrapping="Wrap" FontSize="12" FontWeight="Bold">
+                                            <Run Text="{Binding CategoriaPiuDebole.CategoriaNome}" />
+                                            <Run Text=" (" />
+                                            <Run Text="{Binding CategoriaPiuDebole.DocenteUsername}" />
+                                            <Run Text=")" />
+                                        </TextBlock>
+                                        <TextBlock FontSize="11" TextWrapping="Wrap">
+                                            <Run Text="{Binding CategoriaPiuDebole.PercCorrette}" />
+                                            <Run Text="% di risposte corrette su " />
+                                            <Run Text="{Binding CategoriaPiuDebole.TotaleQuesiti}" />
+                                            <Run Text=" quesiti affrontati" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </utils:StatCard.Description>
+                            </utils:StatCard>
+                        </UniformGrid>
+
                         <oxy:PlotView x:Name="GeneralStatsPieChart" Height="250" Margin="0,0,0,20" /> 
                         <oxy:PlotView x:Name="PunteggiPerCategoriaChart" Height="300" />
                     </StackPanel>
@@ -101,8 +151,13 @@
                             <Button Content="Scegli categorie" Width="120" Margin="8,0,0,0" Click="ChooseCategories_Click" />
                         </StackPanel>
 
-                        <TextBlock x:Name="QuizUniciText" FontSize="14" Margin="0,0,0,2" />
-                        <TextBlock x:Name="QuesitiTotaliText" FontSize="14" Margin="0,0,0,10" />
+                        <UniformGrid x:Name="StatCardsPerCategoriaGrid" Columns="2" HorizontalAlignment="Center" Margin="20" IsItemsHost="False" Visibility="Collapsed">
+                            <!-- StatCard 1 -->
+                            <utils:StatCard Title="Quiz completati" Value="{Binding QuizUnici}" Icon="📘"/>
+
+                            <!-- StatCard 2 -->
+                            <utils:StatCard Title="Quesiti affrontati" Value="{Binding QuesitiTotali}" Icon="📝"/>
+                        </UniformGrid>
 
                         <oxy:PlotView x:Name="StatsPerCategoriaDifficoltaChart" Height="300" Margin="0,0,0,20" />
                         <oxy:PlotView x:Name="PercentualiTotaliPieChart" Height="300" Margin="0,0,0,20" />

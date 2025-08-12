@@ -11,7 +11,7 @@ namespace QuizClient
     public partial class LobbyPage : Page
     {
         private string _jwtToken;
-        private string _ruolo;
+        private string _ruolo="";
 
         public LobbyPage(string jwtToken)
         {

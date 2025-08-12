@@ -3,6 +3,7 @@ using OxyPlot.Axes;
 using OxyPlot.Series;
 using QuizClient.Models;
 using QuizClient.Services;
+using QuizClient.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -81,6 +82,7 @@ namespace QuizClient
             // Popola le statistiche generali 
             ShowGeneralStatsChart(_generalStats.StatsPerCategoria);
 
+            GeneralStatsPanel.DataContext = _generalStats;
         }
 
         private async void LoadStatsPerCategory()
@@ -98,9 +100,9 @@ namespace QuizClient
             // Mostra grafici
             ShowStatsPerDifficoltaChart(_stats.StatsPerDifficolta);
             ShowTop10Studenti(_stats.Top10Studenti);
-            ShowQuesitiSpeciali(_stats.QuesitoPiuIndovinato, _stats.QuesitoPiuSbagliato);
 
-
+            QuesitiSpeciali.Visibility=Visibility.Visible;
+            QuesitiSpeciali.DataContext = _stats;
 
         }
 
@@ -256,50 +258,18 @@ namespace QuizClient
         private void ShowTop10Studenti(List<StudentRanking> top10Studenti)
         {
 
-            if (top10Studenti == null || !top10Studenti.Any())
+            if (top10Studenti == null || top10Studenti.Count == 0)
             {
                 Top10StudentiListView.ItemsSource = null;
                 return;
             }
 
+            ClassificaTitleText.Visibility= Visibility.Visible;
+            Top10StudentiListView.Visibility = Visibility.Visible;
             Top10StudentiListView.ItemsSource = top10Studenti;
         }
 
-        private void ShowQuesitiSpeciali(QuesitoStats? piuIndovinato, QuesitoStats? piuSbagliato)
-        {
-            if (QuesitoPiuIndovinatoText == null || QuesitoPiuSbagliatoText == null)
-                return;
-
-            if (piuIndovinato != null)
-            {
-                QuesitoPiuIndovinatoText.Text =
-                    $"Quesito più indovinato:\n" +
-                    $"- Testo: {piuIndovinato.QuesitoTesto}\n" +
-                    $"- Difficoltà: {piuIndovinato.Difficolta}\n" +
-                    $"- Corrette: {piuIndovinato.Corrette} ({piuIndovinato.PercCorrette:P0})\n" +
-                    $"- Sbagliate: {piuIndovinato.Sbagliate} ({piuIndovinato.PercSbagliate:P0})\n" +
-                    $"- Non date: {piuIndovinato.NonDate} ({piuIndovinato.PercNonDate:P0})";
-            }
-            else
-            {
-                QuesitoPiuIndovinatoText.Text = "Quesito più indovinato: nessun dato disponibile.";
-            }
-
-            if (piuSbagliato != null)
-            {
-                QuesitoPiuSbagliatoText.Text =
-                    $"Quesito più sbagliato:\n" +
-                    $"- Testo: {piuSbagliato.QuesitoTesto}\n" +
-                    $"- Difficoltà: {piuSbagliato.Difficolta}\n" +
-                    $"- Corrette: {piuSbagliato.Corrette} ({piuSbagliato.PercCorrette:P0})\n" +
-                    $"- Sbagliate: {piuSbagliato.Sbagliate} ({piuSbagliato.PercSbagliate:P0})\n" +
-                    $"- Non date: {piuSbagliato.NonDate} ({piuSbagliato.PercNonDate:P0})";
-            }
-            else
-            {
-                QuesitoPiuSbagliatoText.Text = "Quesito più sbagliato: nessun dato disponibile.";
-            }
-        }
+  
 
         private void InfoButton_Click(object sender, RoutedEventArgs e)
         {

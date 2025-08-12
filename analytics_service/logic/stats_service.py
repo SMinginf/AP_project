@@ -1,20 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
-from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from sqlalchemy import func
 from models.ORM_models import Quiz, QuizQuesito, Quesito, CategoriaQuesito, Categoria, Utente
-from database.connect import get_db
-from utils.auth import validate_token
 import pandas as pd
 import math
 
-# Una dependency globale in FastAPI è una funzione o un oggetto che viene 
-# eseguito automaticamente per tutte le rotte di un router o dell'intera 
-# applicazione. Questo permette di applicare logica comune (come validazione, 
-# autenticazione, logging, ecc.) a tutte le richieste senza doverla specificare 
-# manualmente per ogni endpoint.
-routes_group = APIRouter(dependencies=[Depends(validate_token)])
+# [AGGIUNTO] Eccezioni di dominio che il controller mapperà in HTTP status
+class BadRequestError(Exception):
+    pass
+
+class NotFoundError(Exception):
+    pass
 
 
 # Questo punteggio combina accuratezza e confidenza statistica.
@@ -31,10 +27,9 @@ def calcola_punteggio(corrette, errate):
 
 
 # ----------------------------
-# Endpoint: Statistiche generali per Studenti
+# Service: Statistiche generali per Studenti
 # ----------------------------
-@routes_group.get("/student/{student_id}/general", summary="Statistiche generali dello studente")
-def get_student_general_stats(student_id: int, db: Session = Depends(get_db)):
+def get_student_general_stats_logic(student_id: int, db: Session) -> dict:
     """
     Restituisce le statistiche generali sulle prestazioni di uno studente.
     
@@ -44,19 +39,16 @@ def get_student_general_stats(student_id: int, db: Session = Depends(get_db)):
     - Categoria più forte/debole
     - Numero di quiz completati
     """
-    
     # Verifica che lo studente esista
     studente = db.query(Utente).filter(Utente.id == student_id).first()
     if not studente:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Studente con ID {student_id} non trovato."
-        )
+        raise NotFoundError(f"Studente con ID {student_id} non trovato.")
 
     # Recupera tutti i dati dei quiz dello studente
     records = db.query(
         Quiz.id.label("quiz_id"),
         Quiz.data.label("data_quiz"),
+        Quiz.durata,
         QuizQuesito.quesito_id,
         QuizQuesito.risposta_utente,
         Quesito.difficolta,
@@ -74,10 +66,7 @@ def get_student_general_stats(student_id: int, db: Session = Depends(get_db)):
      .all()
 
     if not records:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nessun quiz trovato per questo studente."
-        )
+        raise NotFoundError("Nessun quiz trovato per questo studente.")
 
     # Converti in DataFrame
     df = pd.DataFrame(records)
@@ -97,6 +86,20 @@ def get_student_general_stats(student_id: int, db: Session = Depends(get_db)):
     perc_sbagliate_generali = round((totale_sbagliate / totale_quesiti) * 100, 2) if totale_quesiti > 0 else 0.0
     perc_non_date_generali = round((totale_non_date / totale_quesiti) * 100, 2) if totale_quesiti > 0 else 0.0
 
+    # Durata media dei quiz
+    # Converti la colonna 'durata' da datetime.time a timedelta
+    df["durata_timedelta"] = pd.to_timedelta(df["durata"].astype(str))
+    # Calcola la media
+    durata_media_quiz = df["durata_timedelta"].mean()
+    # Ottieni la durata in secondi totali
+    total_seconds = int(durata_media_quiz.total_seconds())
+    # Calcola ore, minuti e secondi
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+    # Formatta come hh:mm:ss
+    durata_media_formattata = f"{hours:02}:{minutes:02}:{seconds:02}"
+    
     # 2. PUNTEGGI PER CATEGORIA
     categoria_stats = df.groupby(["categoria_id", "categoria_nome", "docente_username"]).agg(
         corrette=("corretta", "sum"),
@@ -115,10 +118,8 @@ def get_student_general_stats(student_id: int, db: Session = Depends(get_db)):
     for _, row in categoria_stats.iterrows():
         corrette = int(row["corrette"])
         sbagliate = int(row["sbagliate"])
-        
         # Calcola il punteggio usando la funzione esistente
         punteggio_calcolato = calcola_punteggio(corrette, sbagliate)
-        
         punteggi_per_categoria.append({
             "categoria_id": int(row["categoria_id"]),
             "categoria_nome": row["categoria_nome"],
@@ -140,7 +141,6 @@ def get_student_general_stats(student_id: int, db: Session = Depends(get_db)):
     if len(punteggi_per_categoria) > 0:
         # Ordina la lista dei punteggi per categoria in base al punteggio già calcolato
         punteggi_ordinati = sorted(punteggi_per_categoria, key=lambda x: x["punteggio"], reverse=True)
-        
         # La migliore è la prima (punteggio più alto)
         migliore = punteggi_ordinati[0]
         categoria_piu_forte = {
@@ -151,7 +151,6 @@ def get_student_general_stats(student_id: int, db: Session = Depends(get_db)):
             "punteggio": migliore["punteggio"],
             "totale_quesiti": migliore["totale_quesiti"]
         }
-        
         # La peggiore è l'ultima (punteggio più basso)
         peggiore = punteggi_ordinati[-1]
         categoria_piu_debole = {
@@ -179,45 +178,26 @@ def get_student_general_stats(student_id: int, db: Session = Depends(get_db)):
         "quiz_completati": quiz_completati,
         "punteggi_per_categoria": punteggi_per_categoria,
         "categoria_piu_forte": categoria_piu_forte,
-        "categoria_piu_debole": categoria_piu_debole
+        "categoria_piu_debole": categoria_piu_debole,
+        "durata_media_quiz": durata_media_formattata
     }
 
 
-
 # ----------------------------
-# Endpoint: Statistiche per Studenti per categorie selezionate
+# Service: Statistiche per Studenti per categorie selezionate
 # ----------------------------
-@routes_group.get("/student/{student_id}", summary="Statistiche studente per categorie specifiche")
-def get_student_stats_per_categorie( student_id: int, categoria_ids: str,db: Session = Depends(get_db)):
-    # Converti la stringa in lista di interi
-    try:
-        categoria_ids_list = [int(id.strip()) for id in categoria_ids.split(",") if id.strip()]
-        if not categoria_ids_list:
-            raise ValueError("Lista categorie vuota")
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Formato categoria_ids non valido. Usa il formato: '1,2,3'"
-        )
-    
+def get_student_stats_per_categorie_logic(student_id: int, categoria_ids_list: List[int], db: Session) -> dict:
     # Verifica che lo studente esista
     studente = db.query(Utente).filter(Utente.id == student_id).first()
     if not studente:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Studente con ID {student_id} non trovato."
-        )
+        raise NotFoundError(f"Studente con ID {student_id} non trovato.")
 
     # Verifica che le categorie esistano e che siano pubbliche
     categorie_esistenti = db.query(Categoria.id).filter(Categoria.id.in_(categoria_ids_list), Categoria.pubblica == True).all()
     categorie_esistenti_ids = [cat.id for cat in categorie_esistenti]
-    
     if len(categorie_esistenti_ids) != len(categoria_ids_list):
         categorie_non_trovate = set(categoria_ids_list) - set(categorie_esistenti_ids)
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Categorie non trovate: {list(categorie_non_trovate)}"
-        )
+        raise NotFoundError(f"Categorie non trovate: {list(categorie_non_trovate)}")
 
     # Step 1: Trova i quiz che contengono TUTTE le categorie richieste
     quiz_con_tutte_categorie = (
@@ -254,10 +234,7 @@ def get_student_stats_per_categorie( student_id: int, categoria_ids: str,db: Ses
      .all()
 
     if not records:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nessun quiz trovato per questo studente nelle categorie specificate."
-        )
+        raise NotFoundError("Nessun quiz trovato per questo studente nelle categorie specificate.")
 
     # Converti in DataFrame
     df = pd.DataFrame(records)
@@ -307,17 +284,32 @@ def get_student_stats_per_categorie( student_id: int, categoria_ids: str,db: Ses
     # Andamento temporale per difficoltà - raggruppa per data (solo giorno, non l'orario)
     df["data_solo"] = df["data_quiz"].dt.date  # Estrae solo la data (YYYY-MM-DD)
 
-    andamento = df.groupby(["data_solo", "difficolta"]).agg(
+    andamento_per_difficolta = df.groupby(["data_solo", "difficolta"]).agg(
         corrette=("corretta", "sum"),
         totale_quesiti=("corretta", "count")  # Conta tutte le righe in cui la colonna corretta è valorizzata (ovvero tutte perchè "corretta" non è mai null. Conta corretti + sbagliati + non dati)
     ).reset_index()
 
-    # Converti i valori numpy in tipi Python nativi per timeline
-    timeline = []
-    for _, row in andamento.iterrows():
-        timeline.append({
+    # Converti i valori numpy in tipi Python nativi per timeline_per_difficolta
+    timeline_per_difficolta = []
+    for _, row in andamento_per_difficolta.iterrows():
+        timeline_per_difficolta.append({
             "data_quiz": row["data_solo"].strftime("%Y-%m-%d") if pd.notnull(row["data_solo"]) else None,
             "difficolta": row["difficolta"],
+            "corrette": int(row["corrette"]),
+            "totale_quesiti": int(row["totale_quesiti"])
+        })
+
+    # 🟦 Andamento totale aggregato per giorno (somma su tutte le difficoltà)
+    andamento_totale = df.groupby("data_solo").agg(
+        corrette=("corretta", "sum"),
+        totale_quesiti=("corretta", "count")
+    ).reset_index()
+
+    # Converte in lista di dict come nel caso per difficoltà
+    timeline_totale = []
+    for _, row in andamento_totale.iterrows():
+        timeline_totale.append({
+            "data_quiz": row["data_solo"].strftime("%Y-%m-%d") if pd.notnull(row["data_solo"]) else None,
             "corrette": int(row["corrette"]),
             "totale_quesiti": int(row["totale_quesiti"])
         })
@@ -335,24 +327,20 @@ def get_student_stats_per_categorie( student_id: int, categoria_ids: str,db: Ses
         },
         "quiz_e_quesiti_totali": quiz_e_quesiti_totali,  
         "stats_per_categoria_difficolta": stats,
-        "andamento_temporale": timeline
+        "andamento_temporale_per_difficolta": timeline_per_difficolta,
+        "andamento_temporale_totale": timeline_totale,
     }
 
 
 # ----------------------------
-# Endpoint: Statistiche generali per Docenti
+# Service: Statistiche generali per Docenti
 # ----------------------------
-@routes_group.get("/teacher/{teacher_id}/general", summary="Statistiche generali per tutti i docenti")
-def get_teacher_general_stats(teacher_id: int, db: Session = Depends(get_db)):
+def get_teacher_general_stats_logic(teacher_id: int, db: Session) -> dict:
     """Restituisce statistiche generali per un docente specifico."""
-    
     # Verifica che il docente esista
     docente = db.query(Utente).filter(Utente.id == teacher_id).first()
     if not docente:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Docente con ID {teacher_id} non trovato.",
-        )
+        raise NotFoundError(f"Docente con ID {teacher_id} non trovato.")
 
     # Recupera tutte le risposte ai quesiti creati dal docente
     records = (
@@ -378,31 +366,31 @@ def get_teacher_general_stats(teacher_id: int, db: Session = Depends(get_db)):
     )
 
     if not records:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nessuna risposta trovata per i quesiti di questo docente.",
-        )
+        raise NotFoundError("Nessuna risposta trovata per i quesiti di questo docente.")
 
     # Costruzione DataFrame dal risultato della query
     df = pd.DataFrame(records)
 
     # Calcola il numero totale di quesiti inseriti dal docente
     num_quesiti_inseriti = db.query(Quesito).filter(Quesito.id_docente == teacher_id).count()
-    
     # Calcola il numero di quesiti del docente affrontati dagli utenti
     num_quesiti_affrontati = df["quesito_id"].nunique()
-
     # Calcola il numero di utenti che hanno affrontato almeno un quesito del docente
     num_utenti = df["studente_id"].nunique()
 
+    # CALCOLA LA DURATA MEDIA DEI QUIZ IN CUI COMPAIONO I QUESITI DEL DOCENTE
     # Converti la colonna 'durata' da datetime.time a timedelta
     df["durata_timedelta"] = pd.to_timedelta(df["durata"].astype(str))
-
     # Calcola la media
     durata_media_quiz = df["durata_timedelta"].mean()
-
-    # Formatta come hh:mm:ss per il client
-    durata_media_formattata = str(durata_media_quiz).split(".")[0]  # rimuove i microsecondi
+    # Ottieni la durata in secondi totali
+    total_seconds = int(durata_media_quiz.total_seconds())
+    # Calcola ore, minuti e secondi
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+    # Formatta come hh:mm:ss
+    durata_media_formattata = f"{hours:02}:{minutes:02}:{seconds:02}"
 
     # Calcolo indicatori binari per ogni risposta
     df["corretta"] = (df["risposta_utente"] == df["op_corretta"]).astype(int)
@@ -411,19 +399,18 @@ def get_teacher_general_stats(teacher_id: int, db: Session = Depends(get_db)):
     ).astype(int)
     df["non_data"] = df["risposta_utente"].isnull().astype(int)
 
-
     df["visibilità"] = df["pubblica"].apply(lambda x: "Pubblica" if x else "Privata")
 
     categories_grouped = (
-            df.groupby(["categoria_nome", "visibilità"])
-            .agg(
-                corrette=("corretta", "sum"),
-                sbagliate=("sbagliata", "sum"),
-                non_date=("non_data", "sum"),
-                tot_quesiti=("quesito_id", "nunique"), # quesiti del docente affrontati dagli utenti
-            )
-            .reset_index()
+        df.groupby(["categoria_nome", "visibilità"])
+        .agg(
+            corrette=("corretta", "sum"),
+            sbagliate=("sbagliata", "sum"),
+            non_date=("non_data", "sum"),
+            tot_quesiti=("quesito_id", "nunique"), # quesiti del docente affrontati dagli utenti
         )
+        .reset_index()
+    )
 
     # Percentuali di correttezza per livello di difficoltà
     categories_grouped["perc_corrette"] = (categories_grouped["corrette"] / categories_grouped["tot_quesiti"]).fillna(0).round(2)
@@ -436,48 +423,29 @@ def get_teacher_general_stats(teacher_id: int, db: Session = Depends(get_db)):
         "num_utenti": int(num_utenti),
         "durata_media_quiz": durata_media_formattata,
         "num_quesiti_inseriti": int(num_quesiti_inseriti)
-    } 
+    }
 
 
-
-# STATISTICHE DOCENTE PER CATEGORIE SELEZIONATE
-@routes_group.get("/teacher/{teacher_id}", summary="Statistiche docente")
-def get_teacher_stats_per_categorie( teacher_id: int, categoria_ids: str,db: Session = Depends(get_db)):
+# ----------------------------
+# Service: Statistiche docente per categorie selezionate
+# ----------------------------
+def get_teacher_stats_per_categorie_logic(teacher_id: int, categoria_ids_list: List[int], db: Session) -> dict:
     """Restituisce statistiche sui quesiti creati dal docente.
 
     Le informazioni sono calcolate aggregando le risposte che gli studenti
     hanno fornito nei quiz che includevano tali quesiti.
     """
-
-    # Converti la stringa in lista di interi
-    try:
-        categoria_ids_list = [int(id.strip()) for id in categoria_ids.split(",") if id.strip()]
-        if not categoria_ids_list:
-            raise ValueError("Lista categorie vuota")
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Formato categoria_ids non valido. Usa il formato: '1,2,3'"
-        )
-    
     # Verifica che il docente esista
     docente = db.query(Utente).filter(Utente.id == teacher_id).first()
     if not docente:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Docente con ID {teacher_id} non trovato.",
-        )
+        raise NotFoundError(f"Docente con ID {teacher_id} non trovato.")
     
     # Verifica che le categorie esistano
     categorie_esistenti = db.query(Categoria.id).filter(Categoria.id.in_(categoria_ids_list)).all()
     categorie_esistenti_ids = [cat.id for cat in categorie_esistenti]
-    
     if len(categorie_esistenti_ids) != len(categoria_ids_list):
         categorie_non_trovate = set(categoria_ids_list) - set(categorie_esistenti_ids)
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Categorie non trovate: {list(categorie_non_trovate)}"
-        )
+        raise NotFoundError(f"Categorie non trovate: {list(categorie_non_trovate)}")
 
     # Recupera tutte le risposte ai quesiti creati dal docente che appartengono a TUTTE le categorie selezionate
     # Step 1: Trova i quesiti che appartengono a TUTTE le categorie richieste
@@ -523,14 +491,10 @@ def get_teacher_stats_per_categorie( teacher_id: int, categoria_ids: str,db: Ses
     # HAVING COUNT(DISTINCT categoria.id) = {len(categoria_ids_list)}
 
     if not records:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nessuna risposta trovata per i quesiti di questo docente.",
-        )
+        raise NotFoundError("Nessuna risposta trovata per i quesiti di questo docente.")
 
     # Costruzione DataFrame dal risultato della query
     df = pd.DataFrame(records)
-
 
     # Calcolo indicatori binari per ogni risposta
     df["corretta"] = (df["risposta_utente"] == df["op_corretta"]).astype(int)
@@ -552,9 +516,9 @@ def get_teacher_stats_per_categorie( teacher_id: int, categoria_ids: str,db: Ses
     )
 
     # Percentuali di correttezza per livello di difficoltà
-    diff_grouped["perc_corrette"] = (diff_grouped["corrette"] / diff_grouped["tot_quesiti"]).fillna(0).round(2)
-    diff_grouped["perc_sbagliate"] = (diff_grouped["sbagliate"] / diff_grouped["tot_quesiti"]).fillna(0).round(2)
-    diff_grouped["perc_non_date"] = (diff_grouped["non_date"] / diff_grouped["tot_quesiti"]).fillna(0).round(2)
+    diff_grouped["perc_corrette"] = (diff_grouped["corrette"] / diff_grouped["tot_quesiti"] * 100).fillna(0).round(2)
+    diff_grouped["perc_sbagliate"] = (diff_grouped["sbagliate"] / diff_grouped["tot_quesiti"] * 100).fillna(0).round(2)
+    diff_grouped["perc_non_date"] = (diff_grouped["non_date"] / diff_grouped["tot_quesiti"] * 100).fillna(0).round(2)
 
     # Classifica studenti e relativi punteggi
     student_rankings = (
@@ -574,9 +538,9 @@ def get_teacher_stats_per_categorie( teacher_id: int, categoria_ids: str,db: Ses
     )
 
     # Calcola percentuali
-    student_rankings["perc_corrette"] = (student_rankings["corrette"] / student_rankings["tot_risposte"]).fillna(0).round(2)
-    student_rankings["perc_sbagliate"] = (student_rankings["sbagliate"] / student_rankings["tot_risposte"]).fillna(0).round(2)
-    student_rankings["perc_non_date"] = (student_rankings["non_date"] / student_rankings["tot_risposte"]).fillna(0).round(2)
+    student_rankings["perc_corrette"] = (student_rankings["corrette"] / student_rankings["tot_risposte"] * 100).fillna(0).round(2)
+    student_rankings["perc_sbagliate"] = (student_rankings["sbagliate"] / student_rankings["tot_risposte"] * 100).fillna(0).round(2)
+    student_rankings["perc_non_date"] = (student_rankings["non_date"] / student_rankings["tot_risposte"] * 100).fillna(0).round(2)
 
     # Ordina per punteggio decrescente e prendi i primi 10
     top_10_students = student_rankings.nlargest(10, "punteggio")
@@ -610,9 +574,9 @@ def get_teacher_stats_per_categorie( teacher_id: int, categoria_ids: str,db: Ses
     )
 
     # Calcola percentuali per ogni quesito
-    quesiti_stats["perc_corrette"] = (quesiti_stats["corrette"] / quesiti_stats["tot_risposte"]).fillna(0).round(2)
-    quesiti_stats["perc_sbagliate"] = (quesiti_stats["sbagliate"] / quesiti_stats["tot_risposte"]).fillna(0).round(2)
-    quesiti_stats["perc_non_date"] = (quesiti_stats["non_date"] / quesiti_stats["tot_risposte"]).fillna(0).round(2)
+    quesiti_stats["perc_corrette"] = (quesiti_stats["corrette"] / quesiti_stats["tot_risposte"] * 100).fillna(0).round(2)
+    quesiti_stats["perc_sbagliate"] = (quesiti_stats["sbagliate"] / quesiti_stats["tot_risposte"] * 100).fillna(0).round(2)
+    quesiti_stats["perc_non_date"] = (quesiti_stats["non_date"] / quesiti_stats["tot_risposte"] * 100).fillna(0).round(2)
 
     # Trova il quesito più indovinato (percentuale corrette più alta)
     quesito_piu_indovinato = None
@@ -621,7 +585,6 @@ def get_teacher_stats_per_categorie( teacher_id: int, categoria_ids: str,db: Ses
     if len(quesiti_stats) > 0:
         # Ordina per percentuale corrette (decrescente)
         quesiti_ordinati_corrette = quesiti_stats.sort_values("perc_corrette", ascending=False)
-        
         migliore = quesiti_ordinati_corrette.iloc[0]
         quesito_piu_indovinato = {
             "quesito_id": int(migliore["quesito_id"]),
@@ -635,7 +598,6 @@ def get_teacher_stats_per_categorie( teacher_id: int, categoria_ids: str,db: Ses
             "perc_sbagliate": float(migliore["perc_sbagliate"]),
             "perc_non_date": float(migliore["perc_non_date"])
         }
-        
         peggiore = quesiti_ordinati_corrette.iloc[-1]
         quesito_piu_sbagliato = {
             "quesito_id": int(peggiore["quesito_id"]),
@@ -656,5 +618,3 @@ def get_teacher_stats_per_categorie( teacher_id: int, categoria_ids: str,db: Ses
         "quesito_piu_indovinato": quesito_piu_indovinato,
         "quesito_piu_sbagliato": quesito_piu_sbagliato,
     }
-
-

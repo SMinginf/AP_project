@@ -82,6 +82,12 @@
             <Setter Property="Margin" Value="0,10,0,6" />
         </Style>
 
+
+        <!-- 📊 Stile per le statcard -->
+        <SolidColorBrush x:Key="CardBackground" Color="#FFF"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#0078D7"/>
+        <DropShadowEffect x:Key="ShadowEffect" BlurRadius="6" ShadowDepth="2" Color="Gray"/>
+
     </Application.Resources>
 
 </Application>

@@ -10,29 +10,31 @@ import (
 // SetupRoutes inizializza tutte le rotte per il microservizio delle sessioni
 func SetupRoutes(router *gin.Engine) {
 	// Gruppo di rotte con prefisso /sessions
-	sessionRoutes := router.Group("/quiz")
-	sessionRoutes.Use(utils.AuthMiddleware())
+	groupRoutes := router.Group("/quiz")
+	groupRoutes.Use(utils.AuthMiddleware())
 	{
 		// POST /sessions/create → Crea una nuova sessione
-		sessionRoutes.POST("/create", handlers.CreateQuiz)
+		groupRoutes.POST("/create", handlers.CreateQuiz)
 
-		sessionRoutes.POST("/store", handlers.StoreQuiz)
+		groupRoutes.POST("/store", handlers.StoreQuiz)
+
+		groupRoutes.POST("/exams", handlers.GenerateExams)
 
 		// POST /sessions/join → Partecipa a una sessione esistente
-		//sessionRoutes.POST("/join", handlers.JoinSession)
+		//groupRoutes.POST("/join", handlers.JoinSession)
 
 		// GET /sessions/list → Lista tutte le sessioni
-		//sessionRoutes.GET("/list", handlers.ListSessions)
+		//groupRoutes.GET("/list", handlers.ListSessions)
 
 		// GET /sessions/:id → Ottieni i dettagli di una sessione specifica
-		//sessionRoutes.GET("/:id", handlers.GetSessionById)
+		//groupRoutes.GET("/:id", handlers.GetSessionById)
 
 		// POST /sessions/leave → Lascia la sessione corrente
 		// Uso POST e non DELETE perchè non sto cancellando una risorsa server-side.
 		// L’utente non sta cancellando la sessione. Sta solo eseguendo un’azione lato server:
 		// "voglio lasciare questa sessione" → un evento, non una rimozione di risorsa.
-		//sessionRoutes.POST("/leave", handlers.LeaveSession)
+		//groupRoutes.POST("/leave", handlers.LeaveSession)
 
-		//sessionRoutes.POST("/:id/start", handlers.StartRequest)
+		//groupRoutes.POST("/:id/start", handlers.StartRequest)
 	}
 }

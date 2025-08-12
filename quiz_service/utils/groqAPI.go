@@ -53,7 +53,7 @@ Istruzioni specifiche per quesiti di matematica:
 
 	// Preparazione della richiesta
 	reqBody := map[string]interface{}{
-		"model": "mistral-saba-24b", // inserisci un modello supportato da Groq
+		"model": "deepseek-r1-distill-llama-70b", // inserisci un modello supportato da Groq
 		"messages": []map[string]string{
 			{
 				"role":    "user",
