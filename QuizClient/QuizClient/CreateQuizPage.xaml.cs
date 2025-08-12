@@ -27,9 +27,9 @@ namespace QuizClient
         {
             try
             {
-                List<int> idCategorieSelezionate = [.. _categorieSelezionate
+                List<uint> idCategorieSelezionate = [.. _categorieSelezionate
                     .Where(c => c != null)
-                    .Select(c => (int)c.ID)];
+                    .Select(c => c.ID)];
 
                 int quantita = int.TryParse(NumQuestionsBox.Text, out int q) ? q : 0;
                 string difficolta = ((ComboBoxItem)DifficultyBox.SelectedItem)?.Content.ToString() ?? "Qualsiasi";

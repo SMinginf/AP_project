@@ -34,28 +34,24 @@ namespace QuizClient
                 return;
             }
 
-            try
+           
+            var result = await _authService.RegisterAsync(ruolo, username, email, nome, cognome, genere, password, data_nascita);
+            if (result.Success && result.Data != null)
             {
-                var (success, message) = await _authService.RegisterAsync(ruolo, username, email, nome, cognome, genere, password, data_nascita);
-                if (success)
-                {
-                    MessageBox.Show(message, "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
-                    NavigationService?.Navigate(new LoginPage());
-                }
-                else
-                {
-                    MessageBox.Show(message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                  MessageBox.Show(result.Data, "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+                  NavigationService.Navigate(new LoginPage());
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show($"Errore durante la registrazione: {ex.Message}", "Exception", MessageBoxButton.OK, MessageBoxImage.Error);
+                  MessageBox.Show(result.ErrorMessage ?? "Errore durante la registrazione dell'utente", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+            
+ 
 
         private void BackToLogin_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService?.Navigate(new LoginPage());
+            NavigationService.GoBack();
         }
     }
 }

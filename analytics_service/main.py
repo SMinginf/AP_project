@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from handlers.handlers import routes_group  # importa il router per le API di autenticazione
+from handlers.stats_controller import routes_group  # importa il router per le API di autenticazione
 import uvicorn
 
 app = FastAPI(

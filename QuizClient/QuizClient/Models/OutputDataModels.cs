@@ -146,8 +146,11 @@ namespace QuizClient.Models
         [JsonPropertyName("stats_per_categoria_difficolta")]
         public List<StatsPerCategoriaDifficolta> StatsPerCategoriaDifficolta { get; set; } = new();
 
-        [JsonPropertyName("andamento_temporale")]
-        public List<TimelineStats> AndamentoTemporale { get; set; } = new();
+        [JsonPropertyName("andamento_temporale_per_difficolta")]
+        public List<TimelineStats> AndamentoTemporalePerDifficolta { get; set; } = new();
+
+        [JsonPropertyName("andamento_temporale_totale")]
+        public List<TimelineStats> AndamentoTemporaleTotale { get; set; } = new();
     }
 
     public class PercentualiTotali
@@ -225,6 +228,9 @@ namespace QuizClient.Models
 
         [JsonPropertyName("quiz_completati")]
         public int QuizCompletati { get; set; }
+
+        [JsonPropertyName("durata_media_quiz")]
+        public string DurataMediaQuiz { get; set; } = "";
 
         [JsonPropertyName("punteggi_per_categoria")]
         public List<PunteggioCategoria> PunteggiPerCategoria { get; set; } = new();
@@ -370,8 +376,6 @@ namespace QuizClient.Models
     // MODELLI PER LE STATISTICHE DI UN DOCENTE RELATIVE ALLE CATEGORIE SELEZIONATE
     public class TeacherCategoryStatsResponse
     {
-        [JsonPropertyName("categorie_filtrate")]
-        public List<int> CategorieFiltrate { get; set; } = new();
 
         [JsonPropertyName("stats_per_difficolta")]
         public List<DifficoltaStats> StatsPerDifficolta { get; set; } = new();
@@ -385,8 +389,6 @@ namespace QuizClient.Models
         [JsonPropertyName("quesito_piu_sbagliato")]
         public QuesitoStats? QuesitoPiuSbagliato { get; set; }
 
-        [JsonPropertyName("stats_per_quesito")]
-        public List<QuesitoStats> StatsPerQuesito { get; set; } = new();
     }
 
     public class DifficoltaStats

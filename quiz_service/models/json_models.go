@@ -4,7 +4,7 @@ package models
 type CreateQuizInput struct {
 	AIGenerated     bool   `json:"ai_generated"` // il tag Gin "required" per i booelani non funziona bene
 	AICategoria     string `json:"ai_categoria"` // categoria da cui generare il quiz con AI
-	IdCategorie     []int  `json:"id_categorie" binding:"required"`
+	IdCategorie     []uint `json:"id_categorie" binding:"required"`
 	Difficolta      string `json:"difficolta" binding:"required,oneof=Facile Intermedia Difficile Qualsiasi"`
 	Quantita        int    `json:"quantita" binding:"required,min=3"`
 	UsernameDocente string `json:"username_docente"` // uso l'username per riconoscere univocamente un docente. Non uso il tag `binding:"required"` perché voglio permettere che possa essere una stringa vuota
@@ -40,8 +40,8 @@ type StoreQuizInput struct {
 	Quantita          int    `json:"quantita" binding:"required,min=3"`
 	IdUtente          uint   `json:"id_utente" binding:"required"`
 	IdQuesiti         []uint `json:"id_quesiti" binding:"required"`
-	RisposteCorrette  int    `json:"corrette" binding:"required,gte=0"` // binding:"required" da solo non accetta 0 come valore valido per un campo numerico, gte=0 (greater than or equal to 0) lo fa esplicitamente
-	RisposteSbagliate int    `json:"sbagliate" binding:"required,gte=0"`
+	RisposteCorrette  int    `json:"corrette" binding:"gte=0"` // binding:"required" da solo non accetta 0 come valore valido per un campo numerico, gte=0 (greater than or equal to 0) lo fa esplicitamente
+	RisposteSbagliate int    `json:"sbagliate" binding:"gte=0"`
 	Durata            string `json:"durata" binding:"required"`
 	DataCreazione     string `json:"data_creazione" binding:"required"`  // formato: "YYYY-MM-DD HH:MM:SS"
 	Risposte          []*int `json:"risposte_utente" binding:"required"` // può essere nil se l'utente non ha risposto
