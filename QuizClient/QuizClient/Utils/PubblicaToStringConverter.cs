@@ -1,7 +1,6 @@
 using System;
 using System.Globalization;
 using System.Windows.Data;
-<<<<<<< HEAD
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 //utilizzato nello XAML per convertire il valore booleano in una stringa "Pubblica" o "Privata"
@@ -36,18 +35,6 @@ namespace QuizClient.Utils
 
         // Il secondo metodo richiesto dall'interfaccia IValueConverter per la conversione "in indietro" (dalla UI al sorgente dati).
         // In questo caso, non è implementato perché non è necessario convertire da stringa a booleano.
-=======
-
-namespace QuizClient.Utils
-{
-    public class PubblicaToStringConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return (value is bool b && b) ? "Pubblica" : "Privata";
-        }
-
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();

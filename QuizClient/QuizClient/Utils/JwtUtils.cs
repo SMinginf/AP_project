@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ï»¿using Microsoft.VisualBasic;
 using QuizClient.Models;
 using System;
@@ -6,23 +5,16 @@ using System.Buffers.Text;
 using System.Runtime.Intrinsics.X86;
 using System.Security.Claims;
 using System.Security.Policy;
-=======
-using System;
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Navigation;
-<<<<<<< HEAD
 using static System.Runtime.InteropServices.JavaScript.JSType;
-=======
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 
 namespace QuizClient.Utils
 {
     public static class JwtUtils
     {
-<<<<<<< HEAD
         // Metodo che prende una JWT (JSON Web Token) e un nome di claim da ricercare all'interno del
         // token e resituisce il valore di quel claim come string.
         public static string GetClaimAsString(string jwt, string claimName)
@@ -33,16 +25,6 @@ namespace QuizClient.Utils
             var parts = jwt.Split('.');
             if (parts.Length != 3)
                 throw new ArgumentException("Il token JWT non Ã¨ in un formato valido.", nameof(jwt));
-=======
-        public static string GetClaimAsString(string jwt, string claimName)
-        {
-            if (string.IsNullOrEmpty(jwt))
-                throw new ArgumentNullException(nameof(jwt), "Il token JWT non può essere nullo o vuoto.");
-
-            var parts = jwt.Split('.');
-            if (parts.Length != 3)
-                throw new ArgumentException("Il token JWT non è in un formato valido.", nameof(jwt));
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 
             var payload = parts[1];
             switch (payload.Length % 4)
@@ -65,7 +47,6 @@ namespace QuizClient.Utils
             throw new InvalidOperationException($"Claim '{claimName}' non trovata o non convertibile in stringa.");
         }
 
-<<<<<<< HEAD
         // Metodo che prende una JWT (JSON Web Token) e un nome di claim da ricercare all'interno del
         // token e resituisce il valore di quel claim come uint.
         public static uint GetClaimAsUInt(string jwt, string claimName)
@@ -92,24 +73,11 @@ namespace QuizClient.Utils
             //Se il resto Ã¨ 2 â†’ aggiungi "==" per completare.
             //Se Ã¨ 3 â†’ aggiungi "=".
             //Senza padding, Convert.FromBase64String() fallirebbe.
-=======
-        public static uint GetClaimAsUInt(string jwt, string claimName)
-        {
-            if (string.IsNullOrEmpty(jwt))
-                throw new ArgumentNullException(nameof(jwt), "Il token JWT non può essere nullo o vuoto.");
-
-            var parts = jwt.Split('.');
-            if (parts.Length != 3)
-                throw new ArgumentException("Il token JWT non è in un formato valido.", nameof(jwt));
-
-            var payload = parts[1];
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
             switch (payload.Length % 4)
             {
                 case 2: payload += "=="; break;
                 case 3: payload += "="; break;
             }
-<<<<<<< HEAD
             //Viene convertito in un array di byte dopo averlo reso conforme al formato standard Base64.
             var bytes = Convert.FromBase64String(payload.Replace('-', '+').Replace('_', '/'));
             
@@ -133,22 +101,12 @@ namespace QuizClient.Utils
                 if (value.ValueKind == JsonValueKind.Number && value.TryGetUInt32(out uint uintValue))
                     return uintValue;
                 //Se il valore Ã¨ una stringa, prova a convertirlo in uint.
-=======
-            var bytes = Convert.FromBase64String(payload.Replace('-', '+').Replace('_', '/'));
-            var json = Encoding.UTF8.GetString(bytes);
-            using var doc = JsonDocument.Parse(json);
-            if (doc.RootElement.TryGetProperty(claimName, out var value))
-            {
-                if (value.ValueKind == JsonValueKind.Number && value.TryGetUInt32(out uint uintValue))
-                    return uintValue;
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
                 if (value.ValueKind == JsonValueKind.String && uint.TryParse(value.GetString(), out uint uintFromString))
                     return uintFromString;
             }
             throw new InvalidOperationException($"Claim '{claimName}' non trovata o non convertibile in uint.");
         }
 
-<<<<<<< HEAD
         // Metodo per validare il ruolo di un docente basato sul JWT.
         public static void ValidateDocenteRole(string jwt, NavigationService? navigationService, FrameworkElement frameworkElement)
         {
@@ -157,16 +115,6 @@ namespace QuizClient.Utils
             try
             {
                 var ruolo = JwtUtils.GetClaimAsString(jwt, "ruolo");
-=======
-        public static string ValidateDocenteRole(string jwt, NavigationService? navigationService, FrameworkElement frameworkElement)
-        {
-            // Controllo ruolo utente dal JWT
-            bool isDocente = false;
-            string ruolo = "";
-            try
-            {
-                ruolo = JwtUtils.GetClaimAsString(jwt, "ruolo");
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
                 isDocente = ruolo == "Docente";
             }
             catch
@@ -178,21 +126,13 @@ namespace QuizClient.Utils
             {
                 MessageBox.Show("Accesso non autorizzato. Solo i docenti possono visualizzare questa pagina.", "Accesso negato", MessageBoxButton.OK, MessageBoxImage.Warning);
 
-<<<<<<< HEAD
                 // Se Ã¨ una finestra, chiudila e imposta DialogResult = false se possibile
-=======
-                // Se è una finestra, chiudila e imposta DialogResult = false se possibile
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
                 if (frameworkElement is Window win)
                 {
                     try { win.DialogResult = false; } catch { /* Ignora se non modale */ }
                     win.Close();
                 }
-<<<<<<< HEAD
                 // Se Ã¨ una pagina con NavigationService, torna indietro
-=======
-                // Se è una pagina con NavigationService, torna indietro
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
                 else if (navigationService != null && navigationService.CanGoBack)
                 {
                     navigationService.GoBack();
@@ -202,14 +142,8 @@ namespace QuizClient.Utils
                 {
                     frameworkElement.IsEnabled = false;
                 }
-<<<<<<< HEAD
                 return;
             }
-=======
-                
-            }
-            return ruolo;
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
         }
     }
 }
