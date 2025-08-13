@@ -23,6 +23,7 @@ namespace QuizClient
     public partial class CategoryDialogWindow : Window
     {
         public Categoria CategoriaCreata { get; private set; }
+
         private string _jwtToken;
 
         public CategoryDialogWindow(string tk)
@@ -57,6 +58,7 @@ namespace QuizClient
                 Quesiti = esistente.Quesiti
             };
         }
+
 
         private void Salva_Click(object sender, RoutedEventArgs e)
         {

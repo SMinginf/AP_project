@@ -1,44 +1,41 @@
-﻿using QuizClient;
-using QuizClient.Models;
-using QuizClient.Services;
-using QuizClient.Utils;
-using System.Collections.Generic;
-using System.Data;
-using System.Globalization;
-using System.Linq;
+﻿using QuizClient.Services;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
+using QuizClient.Models;
+using System.Collections.Generic;
+using System.Linq;
+using QuizClient.Utils;
 
 namespace QuizClient
 {
     public partial class CreateQuizPage : Page
     {
-        private readonly Frame _mainFrame;
         private readonly string _jwtToken;
+        private readonly QuizService _quizService;
+
+        private List<Categoria> _categorieSelezionate = new();
+        private bool _unione = false; // Indica se le categorie selezionate devono essere unite o intersecate
+
+        // Aggiunto SQ
         private string _ruolo = "";
         private Mode _mode = Mode.Default;
-        private bool _unione = false; // Indica se le categorie selezionate devono essere unite o intersecate
-      
-        
-        private List<Categoria> _categorieSelezionate = new List<Categoria>();
-        private List<uint> _id_quesiti = new List<uint>();
-        
-        private readonly QuizService _quizService;
+        private List<uint> _id_quesiti = new List<uint>(); // quesiti per il reroll
         public int Num_domande { get; set; }
-        public List<Quesito> Quesiti_da_sostituire { get; private set;}
+        public List<Quesito> Quesiti_da_sostituire { get; private set; }
 
-        public CreateQuizPage(Frame mainFrame, string jwtToken, Mode m, List<uint> id_quesiti, int num_domande)
+
+
+        public CreateQuizPage(string jwtToken, Mode m, List<uint> id_quesiti, int num_domande)
         {
             InitializeComponent();
-            _mainFrame = mainFrame;
             _jwtToken = jwtToken;
-            _id_quesiti = id_quesiti;
-            _mode = m;
-            this.Num_domande = num_domande;
-            this.Quesiti_da_sostituire = new List<Quesito>();
             _quizService = new QuizService(jwtToken);
 
+            // SQ
+            _id_quesiti = id_quesiti;
+            _mode = m;
+            Num_domande = num_domande;
+            Quesiti_da_sostituire = new List<Quesito>();
             // Recupera il ruolo dal token JWT
             try
             {
@@ -70,11 +67,11 @@ namespace QuizClient
                 case Mode.Reroll_AI:
                     CreaButton.Content = "Sostituisci";
                     NumQuestionsBox.Text = Num_domande.ToString();
-                    NumQuestionsBox.IsReadOnly = true; 
+                    NumQuestionsBox.IsReadOnly = true;
                     TitleTextBlock.Text = "Sostituisci quesiti";
                     DescriptionTextBlock.Text = "Definisci i parametri dei nuovi quesiti";
                     AITextBlock.Text = "I quesiti verranno generati con AI";
-                    AIGeneratedNo.Visibility = Visibility.Collapsed; 
+                    AIGeneratedNo.Visibility = Visibility.Collapsed;
                     AIGeneratedYes.Visibility = Visibility.Collapsed;
                     AIGeneratedYes.IsChecked = true;
                     // da nascondere l'opzione di reroll da DB solo se siamo in QuizManagerPage e veniamo da manuale
@@ -87,35 +84,46 @@ namespace QuizClient
                     AITextBlock.Text = "Vuoi che il quiz sia generato dall'AI?";
                     break;
             }
+
         }
-       
-        //Overload del costruttore per la modalità di creazione quiz senza ID quesiti
-        public CreateQuizPage(Frame mainFrame, string jwtToken, Mode oc) : this(mainFrame, jwtToken, oc, new List<uint>(), 0) { }
+
+        //Overload del costruttore per la modalità di creazione quiz senza ID quesiti (senza reroll)
+        public CreateQuizPage(string jwtToken, Mode m) : this (jwtToken, m, new List<uint>(), 0) { }
+
         private async void CreateQuiz_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-
-                List<int> idCategorieSelezionate = [.. _categorieSelezionate
+                List<uint> idCategorieSelezionate = [.. _categorieSelezionate
                     .Where(c => c != null)
-                    .Select(c => (int)c.ID)];
+                    .Select(c => c.ID)];
 
                 int quantita = int.TryParse(NumQuestionsBox.Text, out int q) ? q : 0;
                 string difficolta = ((ComboBoxItem)DifficultyBox.SelectedItem)?.Content.ToString() ?? "Qualsiasi";
                 bool aiGenerated = AIGeneratedYes.IsChecked == true;
-                string aiCategoria = aiGenerated ? AICategoryText.Text : string.Empty;
+                string aiCategoria = aiGenerated ? AICategoryBox.Text : string.Empty;
                 List<uint> idQuesitiSelezionati = _id_quesiti; //se siamo in modalità reroll
 
 
                 ServiceResult<Quiz> result = await _quizService.CreateQuizAsync(
-                        aiGenerated,
-                        aiCategoria,
-                        idCategorieSelezionate,
-                        _unione,
-                        difficolta,
-                        quantita,
-                        idQuesitiSelezionati
-                    );
+                    aiGenerated,
+                    aiCategoria,
+                    idCategorieSelezionate,
+                    _unione,
+                    difficolta,
+                    quantita,
+                    idQuesitiSelezionati
+                );
+
+                //    if (result != null && result.Success && result.Data != null)
+                //    {
+                //        MessageBox.Show("Quiz creato con successo!");
+                //        NavigationService?.Navigate(new QuizPage(result.Data, _jwtToken));
+                //    }
+                //    else
+                //    {
+                //        MessageBox.Show(result?.ErrorMessage ?? "Errore nella creazione del quiz.", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                //    }
 
                 // Gestione result 
                 if (result != null && result.Success && result.Data != null)
@@ -123,7 +131,7 @@ namespace QuizClient
                     if (_ruolo == "Studente")
                     {
                         MessageBox.Show("Quiz creato con successo!");
-                        _mainFrame.Navigate(new QuizPage(result.Data, _jwtToken));
+                        NavigationService.Navigate(new QuizPage(result.Data, _jwtToken));
                     }
                     else //Docente
                     {
@@ -133,7 +141,7 @@ namespace QuizClient
                             // Se siamo nella pagina di gestione quiz,
                             // sostituiamo i quesiti accessibili all'esterno 
                             Quesiti_da_sostituire = result.Data.Quesiti;
-                            
+
                             if (Quesiti_da_sostituire.Count == 0)
                             {
                                 MessageBox.Show("Nessun quesito creato. Assicurati di aver selezionato almeno una categoria o di aver impostato l'AI.", "Attenzione", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -146,24 +154,29 @@ namespace QuizClient
                         }
 
                         //Comportamento base se vengo da selezione random
-                        else _mainFrame.Navigate(new QuizManagerPage(_mainFrame, _jwtToken, result.Data));
+                        else NavigationService.Navigate(new QuizManagerPage(_jwtToken, result.Data));
                     }
                 }
                 else
                 {
                     MessageBox.Show(result?.ErrorMessage ?? "Errore nella creazione del quiz.", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
+
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Errore: {ex.Message}", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+
+
         }
+
         private void AIGenerated_Checked(object sender, RoutedEventArgs e)
         {
             bool isAI = AIGeneratedYes.IsChecked == true;
 
-            if (CategorieSelezionateLabel == null || CategoryBox == null) {
+            if (CategorieSelezionateLabel == null || CategoryBox == null)
+            {
                 return;
             }
 
@@ -186,15 +199,20 @@ namespace QuizClient
             // Mostra/nasconde il pannello per la categoria AI
             AICategoryPanel.Visibility = isAI ? Visibility.Visible : Visibility.Collapsed;
         }
+
         private void Back_Click(object sender, RoutedEventArgs e)
         {
+            //SQ
+            // Se siamo in modalità Reroll_AI o Reroll_AI_DB, chiudiamo la finestra
+            // altrimenti torniamo indietro nella navigazione
             if (_mode == Mode.Reroll_AI || _mode == Mode.Reroll_AI_DB)
             {
                 Window parentWindow = Window.GetWindow(this);
                 parentWindow.DialogResult = false;
             }
-            else _mainFrame.GoBack();
+            else NavigationService.GoBack();
         }
+
         private void ApriSelezioneCategorie_Click(object sender, RoutedEventArgs e)
         {
             var selettore = new CategorySelectionWindow(_jwtToken, Mode.Default);

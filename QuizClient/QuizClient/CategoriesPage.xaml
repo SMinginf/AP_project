@@ -1,19 +1,15 @@
 ﻿<Page x:Class="QuizClient.CategoriesPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:QuizClient"
       xmlns:utils="clr-namespace:QuizClient.Utils"
-      mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
       Title="CategoriesPage">
 
     <Page.Resources>
         <utils:PubblicaToStringConverter x:Key="PubblicaToStringConverter"/>
     </Page.Resources>
 
-    <Grid Margin="20" Background="White">
+    <Grid Background="{StaticResource AppBackgroundBrush}" Margin="30">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -21,112 +17,126 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- 📘 Titolo -->
-        <TextBlock Text="Gestione Categorie" FontSize="24" FontWeight="Bold" Grid.Row="0" Margin="0,0,0,10"/>
+        <!-- Titolo -->
+        <TextBlock Text="Gestione Categorie"
+                   Style="{StaticResource PageTitle}"
+                   Grid.Row="0"/>
 
-        <!-- 🔍 Campo di ricerca -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
-            <TextBlock Text="Cerca per nome:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+        <!-- Filtro e Ricerca -->
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,0,0,20" HorizontalAlignment="Left">
+            <TextBlock Text="Cerca:"
+                       Style="{StaticResource SectionTitle}"
+                       VerticalAlignment="Center"
+                       Margin="0,0,10,0"/>
+
             <TextBox x:Name="SearchBox"
-             Width="250"
-             TextChanged="SearchBox_TextChanged"
-             VerticalAlignment="Center"
-             ToolTip="Digita il nome della categoria"/>
+                     Width="250"
+                     Height="30"
+                     FontSize="14"
+                     VerticalContentAlignment="Center"
+                     TextChanged="SearchBox_TextChanged"
+                     Margin="0,0,20,0"
+                     ToolTip="Digita il nome della categoria"/>
 
             <CheckBox x:Name="FiltroPubbliche"
-              Content="Solo pubbliche"
-              Margin="100,0,50,0"
-              Checked="FiltroPubblica_Checked"
-              Unchecked="Filtri_Unchecked"
-              VerticalAlignment="Center"/>
+                      Content="Solo pubbliche"
+                      FontSize="13"
+                      VerticalAlignment="Center"
+                      Margin="0,0,20,0"
+                      Checked="FiltroPubblica_Checked"
+                      Unchecked="Filtri_Unchecked"/>
 
             <CheckBox x:Name="FiltroPrivate"
-              Content="Solo private"
-              Checked="FiltroPrivata_Checked"
-              Unchecked="Filtri_Unchecked"
-              VerticalAlignment="Center"/>
+                      Content="Solo private"
+                      FontSize="13"
+                      VerticalAlignment="Center"
+                      Checked="FiltroPrivata_Checked"
+                      Unchecked="Filtri_Unchecked"/>
         </StackPanel>
 
-        
+        <!-- Elenco Categorie in stile Card -->
+        <!-- Lista Categorie wrappata in una card -->
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+            <ListView x:Name="CategoryListView"
+              BorderThickness="0"
+              Background="Transparent"
+              SelectionMode="Single"
+              MouseDoubleClick="CategoryListView_MouseDoubleClick">
+                <ListView.View>
+                    <GridView>
+                        <!-- Colonna Checkbox -->
+                        <GridViewColumn Header="✓" Width="40">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding Selezionata}" HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
 
-        <!-- 📋 Elenco categorie -->
-        <DataGrid x:Name="CategorieGrid"
-              Grid.Row="2"
-              AutoGenerateColumns="False"
-              IsReadOnly="True"
-              Margin="0,0,0,10"
-              MinHeight="200"
-              Height="300"
-              MouseDoubleClick="CategorieGrid_MouseDoubleClick"
-              SelectionMode="Single">
+                        <!-- Colonna Nome -->
+                        <GridViewColumn Header="Nome" Width="180">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Nome}" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <!-- Colonna Tipo -->
+                        <GridViewColumn Header="Tipo" Width="150">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Tipo}" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <!-- Colonna Descrizione con trimming -->
+                        <GridViewColumn Header="Descrizione" Width="220">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Descrizione}"
+                                       TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center"
+                                       MaxWidth="300"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <!-- Colonna Visibilità -->
+                        <GridViewColumn Header="Visibilità" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Pubblica, Converter={StaticResource PubblicaToStringConverter}}" 
+                                       VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Border>
 
 
-            <DataGrid.Resources>
-                <!-- Celle senza evidenziazione -->
-                <Style TargetType="DataGridCell">
-                    <Setter Property="Background" Value="White"/>
-                    <Setter Property="Foreground" Value="Black"/>
-                    <Setter Property="BorderBrush" Value="LightGray"/>
-                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                    <Style.Triggers>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="White"/>
-                            <Setter Property="Foreground" Value="Black"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </DataGrid.Resources>
+        <!-- Pulsanti -->
+        <StackPanel Grid.Row="3"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,10,0,0">
+            <Button Content="⬅ Indietro"
+                    Width="110"
+                    Height="35"
+                    Click="Back_Click"/>
 
-            <!-- Righe senza sfondo selezione -->
-            <DataGrid.RowStyle>
-                <Style TargetType="DataGridRow">
-                    <Setter Property="Background" Value="White"/>
-                    <Setter Property="Foreground" Value="Black"/>
-                    <Setter Property="BorderBrush" Value="LightGray"/>
-                
-                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                    <Style.Triggers>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="White"/>
-                            <Setter Property="Foreground" Value="Black"/>
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#FFF5F5F5"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </DataGrid.RowStyle>
+            <Button Content="➕ Nuova"
+                    Width="110"
+                    Height="35"
+                    Click="NuovaCategoria_Click"/>
 
-            <DataGrid.Columns>
-                <DataGridTemplateColumn Width="35">
-                    <DataGridTemplateColumn.Header>
-                        <CheckBox Click="SelezionaTutteLeCheckbox_Click"/>
-                    </DataGridTemplateColumn.Header>
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <CheckBox IsChecked="{Binding Selezionata, Mode=TwoWay}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Nome" Binding="{Binding Nome}" Width="*"/>
-                <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" Width="*"/>
-                <DataGridTemplateColumn Header="Descrizione" Width="2*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Descrizione}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" VerticalAlignment="Center" Height="22"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Visibilità" Binding="{Binding Pubblica, Converter={StaticResource PubblicaToStringConverter}}" Width="Auto"/>
-            </DataGrid.Columns>
-        </DataGrid>
-
-        <!-- 🔘 Pulsanti -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,0">
-            <Button Content="⬅️ Indietro" Width="100" Margin="5,5,430,5" Click="Back_Click"/>
-            <Button Content="➕ Nuova" Width="100" Margin="5" Click="NuovaCategoria_Click"/>
-            <Button Content="🗑️ Elimina" Width="100" Margin="5" Click="EliminaCategorie_Click"/>
+            <Button Content="🗑 Elimina"
+                    Width="110"
+                    Height="35"
+                    Click="EliminaCategorie_Click"/>
         </StackPanel>
     </Grid>
 </Page>

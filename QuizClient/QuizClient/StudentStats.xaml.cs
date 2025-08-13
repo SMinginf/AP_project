@@ -75,23 +75,8 @@ namespace QuizClient
             }
             var generalStats = result.Data;
 
-            // Debug: stampa i dati delle categorie su Output
-            if (generalStats.PunteggiPerCategoria != null)
-            {
-                foreach (var p in generalStats.PunteggiPerCategoria)
-                {
-                    System.Diagnostics.Debug.WriteLine(
-                        $"Categoria: {p.CategoriaNome}, Docente: {p.DocenteUsername}, Corrette: {p.Corrette}, Sbagliate: {p.Sbagliate}, NonDate: {p.NonDate}");
-                }
-            }
 
-            
-            // Popola le statistiche generali
-            GeneralStatsTextBlock.Text = $"L'utente ha svolto {generalStats.QuizCompletati} quiz in totale.\n" +
-                $"La categoria in cui è più forte è {generalStats.CategoriaPiuForte?.CategoriaNome}({generalStats.CategoriaPiuForte?.DocenteUsername}) " +
-                $"con il {generalStats.CategoriaPiuForte?.PercCorrette}% di risposte corrette su un totale di {generalStats.CategoriaPiuForte?.TotaleQuesiti} quesiti.\n" +
-                $"La categoria in cui è più debole è {generalStats.CategoriaPiuDebole?.CategoriaNome}({generalStats.CategoriaPiuDebole?.DocenteUsername}) " +
-                $"con il {generalStats.CategoriaPiuDebole?.PercCorrette}% di risposte corrette su un totale di {generalStats.CategoriaPiuDebole?.TotaleQuesiti} quesiti.";
+            GeneralStatsPanel.DataContext= generalStats;
 
             ShowPercentualiTotaliChart(generalStats.StatisticheGenerali.PercCorrette, generalStats.StatisticheGenerali.PercSbagliate, generalStats.StatisticheGenerali.PercNonDate, GeneralStatsPieChart);
             
@@ -114,9 +99,10 @@ namespace QuizClient
             _stats = stats_result.Data;
 
             // Mostra quiz e quesiti totali
-            QuizUniciText.Text = $"Numero di quiz svolti in cui compaiono le categorie selezionate: {_stats.QuizEQuesitiTotali.QuizUnici}";
-            QuesitiTotaliText.Text = $"Numero di quesiti svolti appartenenti alle categorie selezionate: {_stats.QuizEQuesitiTotali.QuesitiTotali}";
+            StatsPanel.DataContext = _stats.QuizEQuesitiTotali;
+            StatCardsPerCategoriaGrid.Visibility = Visibility.Visible;
 
+            // Mostra grafici
             ShowStatsPerCategoriaChart();
             ShowPercentualiTotaliChart(_stats.PercentualiTotali.PercCorrette, _stats.PercentualiTotali.PercSbagliate, _stats.PercentualiTotali.PercNonDate, PercentualiTotaliPieChart);
             ShowAndamentoTemporaleChart();
@@ -220,7 +206,8 @@ namespace QuizClient
 
         private void ShowAndamentoTemporaleChart()
         {
-            if (_stats?.AndamentoTemporale == null || !_stats.AndamentoTemporale.Any())
+            // ANDAMENTO PER DIFFICOLTA'
+            if (_stats?.AndamentoTemporalePerDifficolta == null || _stats.AndamentoTemporalePerDifficolta.Count == 0)
                 return;
 
             var model = new PlotModel { Title = "Andamento temporale per difficoltà" };
@@ -250,19 +237,19 @@ namespace QuizClient
 
             // Colori per difficoltà
             var colorMap = new Dictionary<string, OxyColor>
-    {
-        { "Facile", OxyColors.SeaGreen },
-        { "Intermedia", OxyColors.SteelBlue },
-        { "Difficile", OxyColors.IndianRed }
-    };
+            {
+                { "Facile", OxyColors.SeaGreen },
+                { "Intermedia", OxyColors.SteelBlue },
+                { "Difficile", OxyColors.IndianRed }
+            };
 
-            var difficoltaPresenti = _stats.AndamentoTemporale
+            var difficoltaPresenti = _stats.AndamentoTemporalePerDifficolta
                 .Select(t => t.Difficolta)
                 .Distinct();
 
             foreach (var difficolta in difficoltaPresenti)
             {
-                var punti = _stats.AndamentoTemporale
+                var punti = _stats.AndamentoTemporalePerDifficolta
                     .Where(t => t.Difficolta == difficolta && t.TotaleQuesiti > 0)
                     .OrderBy(t => t.DataQuiz)
                     .ToList();
@@ -282,7 +269,7 @@ namespace QuizClient
                     };
 
                     var p = punti.First();
-                    double y = (p.Corrette * 100.0) / p.TotaleQuesiti;
+                    double y = Math.Round((p.Corrette * 100.0) / p.TotaleQuesiti,2);
                     scatter.Points.Add(new ScatterPoint(DateTimeAxis.ToDouble(p.DataQuiz.ToLocalTime()), y));
 
                     model.Series.Add(scatter);
@@ -305,7 +292,7 @@ namespace QuizClient
 
                     foreach (var punto in punti)
                     {
-                        double percentualeCorrette = (punto.Corrette * 100.0) / punto.TotaleQuesiti;
+                        double percentualeCorrette = Math.Round((punto.Corrette * 100.0) / punto.TotaleQuesiti,2);
                         var dataX = DateTimeAxis.ToDouble(punto.DataQuiz.ToLocalTime());
                         lineSeries.Points.Add(new DataPoint(dataX, percentualeCorrette));
                     }
@@ -313,6 +300,59 @@ namespace QuizClient
                     model.Series.Add(lineSeries);
                 }
             }
+
+
+            // ANDAMENTO TOTALE
+            if (_stats.AndamentoTemporaleTotale != null && _stats.AndamentoTemporaleTotale.Count != 0)
+            {
+                var puntiTotali = _stats.AndamentoTemporaleTotale
+                    .Where(t => t.TotaleQuesiti > 0)
+                    .OrderBy(t => t.DataQuiz)
+                    .ToList();
+
+                if (puntiTotali.Count == 1)
+                {
+                    var scatter = new ScatterSeries
+                    {
+                        Title = "Totale",
+                        MarkerType = MarkerType.Square,
+                        MarkerSize = 6,
+                        MarkerFill = OxyColors.Black
+                    };
+
+                    var p = puntiTotali.First();
+                    double y = Math.Round((p.Corrette * 100.0) / p.TotaleQuesiti, 2);
+                    scatter.Points.Add(new ScatterPoint(DateTimeAxis.ToDouble(p.DataQuiz.ToLocalTime()), y));
+
+                    model.Series.Add(scatter);
+                }
+                else
+                {
+                    var lineSeries = new LineSeries
+                    {
+                        Title = "Totale",
+                        Color = OxyColors.Black,
+                        StrokeThickness = 2,
+                        MarkerType = MarkerType.Square,
+                        MarkerSize = 5,
+                        CanTrackerInterpolatePoints = false,
+                        MarkerStroke = OxyColors.Black,
+                        MarkerFill = OxyColors.Black,
+                        LineStyle = LineStyle.Dash
+                    };
+
+                    foreach (var punto in puntiTotali)
+                    {
+                        double percentualeCorrette = Math.Round((punto.Corrette * 100.0) / punto.TotaleQuesiti, 2);
+                        var dataX = DateTimeAxis.ToDouble(punto.DataQuiz.ToLocalTime());
+                        lineSeries.Points.Add(new DataPoint(dataX, percentualeCorrette));
+                    }
+
+                    model.Series.Add(lineSeries);
+                }
+            }
+
+
 
             StudentTimelineChart.Model = model;
         }

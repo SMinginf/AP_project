@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "oqU0ToYk4ss=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Hirogo\\Desktop\\proj_fin_v_SM\\AP_project-master\\QuizClient\\QuizClient\\QuizClient.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Hirogo\\.nuget\\packages\\oxyplot.core\\2.2.0\\oxyplot.core.2.2.0.nupkg.sha512",
+    "C:\\Users\\Hirogo\\.nuget\\packages\\oxyplot.wpf\\2.2.0\\oxyplot.wpf.2.2.0.nupkg.sha512",
+    "C:\\Users\\Hirogo\\.nuget\\packages\\oxyplot.wpf.shared\\2.2.0\\oxyplot.wpf.shared.2.2.0.nupkg.sha512"
+  ],
+  "logs": []
+}

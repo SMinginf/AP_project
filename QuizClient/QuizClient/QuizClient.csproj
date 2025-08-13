@@ -6,6 +6,16 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <!-- Allow building the WPF project on non-Windows build agents -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- Avoid duplicate assembly info attributes during cross-platform builds -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <SupportedOSPlatform>Windows</SupportedOSPlatform>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OxyPlot.Wpf" Version="2.2.0" />
+  </ItemGroup>
 
 </Project>
