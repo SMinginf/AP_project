@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ﻿using QuizClient;
 using QuizClient.Models;
 using QuizClient.Services;
@@ -10,21 +9,11 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-=======
-﻿using QuizClient.Services;
-using System.Windows;
-using System.Windows.Controls;
-using QuizClient.Models;
-using System.Collections.Generic;
-using System.Linq;
-using QuizClient.Utils;
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 
 namespace QuizClient
 {
     public partial class CreateQuizPage : Page
     {
-<<<<<<< HEAD
         private readonly Frame _mainFrame;
         private readonly string _jwtToken;
         private string _ruolo = "";
@@ -102,29 +91,11 @@ namespace QuizClient
        
         //Overload del costruttore per la modalità di creazione quiz senza ID quesiti
         public CreateQuizPage(Frame mainFrame, string jwtToken, Mode oc) : this(mainFrame, jwtToken, oc, new List<uint>(), 0) { }
-=======
-        private readonly string _jwtToken;
-        private readonly QuizService _quizService;
-
-        private List<Categoria> _categorieSelezionate = new();
-        private bool _unione = false; // Indica se le categorie selezionate devono essere unite o intersecate
-
-        public CreateQuizPage(string jwtToken)
-        {
-            InitializeComponent();
-            _jwtToken = jwtToken;
-            _quizService = new QuizService(jwtToken);
-        }
-
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
         private async void CreateQuiz_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-<<<<<<< HEAD
 
-=======
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
                 List<int> idCategorieSelezionate = [.. _categorieSelezionate
                     .Where(c => c != null)
                     .Select(c => (int)c.ID)];
@@ -132,7 +103,6 @@ namespace QuizClient
                 int quantita = int.TryParse(NumQuestionsBox.Text, out int q) ? q : 0;
                 string difficolta = ((ComboBoxItem)DifficultyBox.SelectedItem)?.Content.ToString() ?? "Qualsiasi";
                 bool aiGenerated = AIGeneratedYes.IsChecked == true;
-<<<<<<< HEAD
                 string aiCategoria = aiGenerated ? AICategoryText.Text : string.Empty;
                 List<uint> idQuesitiSelezionati = _id_quesiti; //se siamo in modalità reroll
 
@@ -178,23 +148,6 @@ namespace QuizClient
                         //Comportamento base se vengo da selezione random
                         else _mainFrame.Navigate(new QuizManagerPage(_mainFrame, _jwtToken, result.Data));
                     }
-=======
-                string aiCategoria = aiGenerated ? AICategoryBox.Text : string.Empty;
-
-                ServiceResult<Quiz> result = await _quizService.CreateQuizAsync(
-                    aiGenerated,
-                    aiCategoria,
-                    idCategorieSelezionate,
-                    _unione,
-                    difficolta,
-                    quantita
-                );
-
-                if (result != null && result.Success && result.Data != null)
-                {
-                    MessageBox.Show("Quiz creato con successo!");
-                    NavigationService?.Navigate(new QuizPage(result.Data, _jwtToken));
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
                 }
                 else
                 {
@@ -206,20 +159,11 @@ namespace QuizClient
                 MessageBox.Show($"Errore: {ex.Message}", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-<<<<<<< HEAD
-=======
-
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
         private void AIGenerated_Checked(object sender, RoutedEventArgs e)
         {
             bool isAI = AIGeneratedYes.IsChecked == true;
 
-<<<<<<< HEAD
             if (CategorieSelezionateLabel == null || CategoryBox == null) {
-=======
-            if (CategorieSelezionateLabel == null || CategoryBox == null)
-            {
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
                 return;
             }
 
@@ -242,7 +186,6 @@ namespace QuizClient
             // Mostra/nasconde il pannello per la categoria AI
             AICategoryPanel.Visibility = isAI ? Visibility.Visible : Visibility.Collapsed;
         }
-<<<<<<< HEAD
         private void Back_Click(object sender, RoutedEventArgs e)
         {
             if (_mode == Mode.Reroll_AI || _mode == Mode.Reroll_AI_DB)
@@ -255,18 +198,6 @@ namespace QuizClient
         private void ApriSelezioneCategorie_Click(object sender, RoutedEventArgs e)
         {
             var selettore = new CategorySelectionWindow(_jwtToken, Mode.Default);
-=======
-
-        private void Back_Click(object sender, RoutedEventArgs e)
-        {
-            if (NavigationService?.CanGoBack == true)
-                NavigationService.GoBack();
-        }
-
-        private void ApriSelezioneCategorie_Click(object sender, RoutedEventArgs e)
-        {
-            var selettore = new CategorySelectionWindow(_jwtToken);
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
             if (selettore.ShowDialog() == true && selettore.Selezionate != null)
             {
                 _categorieSelezionate = selettore.Selezionate;
@@ -279,8 +210,4 @@ namespace QuizClient
             }
         }
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba

@@ -43,7 +43,6 @@ namespace QuizClient
 
         public ObservableCollection<Quesito> QuesitiQuiz { get; set; } = new ObservableCollection<Quesito>();
        
-        
         public QuizManagerPage(Frame mainFrame, string jwtToken, Quiz quiz)
         {
             InitializeComponent();

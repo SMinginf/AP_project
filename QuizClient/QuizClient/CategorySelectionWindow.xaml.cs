@@ -6,11 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-<<<<<<< HEAD
 using System.Windows.Navigation;
-=======
-using System.Windows.Controls;
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 
 namespace QuizClient
 {
@@ -23,7 +19,6 @@ namespace QuizClient
 
         private readonly CRUDService _CRUDService;
         private readonly string _jwtToken;
-<<<<<<< HEAD
         private readonly string _ruolo;
 
         // Costruttore per creare una nuova categoria
@@ -53,80 +48,6 @@ namespace QuizClient
                 result = await _CRUDService.GetCategoriePubblicheAsync();
             }
             else { result = await _CRUDService.GetCategorieByDocenteAsync();}
-=======
-        
-        private bool IsFromStatsPage = false; // Indica se la finestra è stata aperta dalla pagina delle statistiche. Mi serve per riutilizzare la pagina cambiando qualcosina.
-        private string _ruolo="";
-        public CategorySelectionWindow(string jwt, bool isFromStatsPage = false)
-        {
-            InitializeComponent();
-            _jwtToken = jwt;
-            _CRUDService = new CRUDService(_jwtToken);
-
-            try
-            {
-                //ricavo il ruolo dell'utente dal token JWT
-                _ruolo = JwtUtils.GetClaimAsString(_jwtToken, "ruolo");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Errore nel recupero del ruolo utente dal token JWT: {ex.Message}", "Errore JWT", MessageBoxButton.OK, MessageBoxImage.Error);
-                Close();
-                return;
-            }
-
-            IsFromStatsPage = isFromStatsPage;
-
-            Personalizza();
-            CaricaCategorie();
-        }
-
-
-        private void Personalizza()
-        {
-            if (IsFromStatsPage)
-            {
-                CategoryModePanel.Visibility = Visibility.Collapsed;
-
-                if (_ruolo == "Docente") //aggiungo la colonna Visibilità solo se la finestra è stata aperta dalla pagina delle statistiche docente
-                {
-                    var gridView = CategoryListView.View as GridView;
-                    if (gridView != null)
-                    {
-                        var visibilitaColumn = new GridViewColumn
-                        {
-                            Header = "Visibilità",
-                            Width = 60,
-                            CellTemplate = (DataTemplate)FindResource("VisibilitaCellTemplate"),
-                        };
-                        gridView.Columns.Add(visibilitaColumn);
-                    }
-                }
-
-            }
-
-
-        }
-        private async void CaricaCategorie()
-        {
-            ServiceResult<List<Categoria>> result = new();
-
-            if (IsFromStatsPage)
-            {        
-                if (_ruolo == "Studente")
-                {
-                    // Se la finestra è stata aperta dalla pagina delle statistiche studente, mostro le categorie affrontate dallo studente
-                    result = await _CRUDService.GetCategorieByStudenteAsync();
-                }
-                else if (_ruolo == "Docente")
-                {
-                    // Se la finestra è stata aperta dalla pagina delle statistiche docente, mostro tutte le categorie create dal docente
-                    result = await _CRUDService.GetCategorieByDocenteAsync(); //devo fare il get di tutte le categorie di un docente
-                }
-            }
-            else
-                result = await _CRUDService.GetCategoriePubblicheAsync();
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 
             if (result.Success && result.Data != null)
             {
@@ -140,7 +61,6 @@ namespace QuizClient
             }
         }
 
-<<<<<<< HEAD
         // Metodo per filtrare le categorie in base al testo di ricerca
         private void FiltraCategorie(string filtro)
         {
@@ -155,36 +75,17 @@ namespace QuizClient
             }
 
 
-=======
-        private void FiltraCategorie(string filtro)
-        {
-            _categorieFiltrate.Clear();
-            foreach (var cat in _tutteLeCategorie.Where(c =>
-                c.Pubblica && (string.IsNullOrWhiteSpace(filtro) || c.Nome.Contains(filtro, System.StringComparison.OrdinalIgnoreCase))))
-            {
-                _categorieFiltrate.Add(cat);
-            }
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
             CategoryListView.ItemsSource = null;
             CategoryListView.ItemsSource = _categorieFiltrate;
         }
 
 
-<<<<<<< HEAD
         // Gestione degli eventi per la ricerca e il filtro delle categorie
         private void SearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => FiltraCategorie(SearchBox.Text);
         private void FilterChanged(object sender, RoutedEventArgs e) => FiltraCategorie(SearchBox.Text);
 
         // Gestione dei pulsanti di conferma e annullamento
         private void Annulla_Click(object sender, RoutedEventArgs e) => Close();
-=======
-
-        private void SearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => FiltraCategorie(SearchBox.Text);
-        private void FilterChanged(object sender, RoutedEventArgs e) => FiltraCategorie(SearchBox.Text);
-
-        private void Annulla_Click(object sender, RoutedEventArgs e) => Close();
-
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
         private void Conferma_Click(object sender, RoutedEventArgs e)
         {
             Unione = UnionOption.IsChecked == true;

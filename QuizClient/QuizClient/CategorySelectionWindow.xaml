@@ -1,6 +1,5 @@
 ﻿<Window x:Class="QuizClient.CategorySelectionWindow"  
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"  
-<<<<<<< HEAD
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"  
         
         Title="Seleziona Categorie" Height="500" Width="600">  
@@ -29,65 +28,10 @@
                 <RadioButton x:Name="IntersectionOption" Content="Intersezione" GroupName="CategoryMode" Margin="0,10,0,5" VerticalAlignment="Center"/>
             </StackPanel>
             <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="Gray" Margin="0,5,0,0">
-=======
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:utils="clr-namespace:QuizClient.Utils"
-        Title="Seleziona Categorie"
-        Height="500"
-        Width="700"
-        Background="{StaticResource AppBackgroundBrush}">
-    <Window.Resources>
-        <utils:PubblicaToStringConverter x:Key="PubblicaToStringConverter"/>
-        <DataTemplate x:Key="VisibilitaCellTemplate">
-            <TextBlock Text="{Binding Pubblica, Converter={StaticResource PubblicaToStringConverter}}" HorizontalAlignment="Center"/>
-        </DataTemplate>
-    </Window.Resources>
-
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- 🔍 Barra di ricerca -->
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-            <TextBlock Text="Cerca:" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <TextBox x:Name="SearchBox"
-                     Width="250"
-                     Height="30"
-                     VerticalAlignment="Center"
-                     TextChanged="SearchBox_TextChanged"/>
-        </StackPanel>
-
-        <!-- 🎯 Modalità filtro categorie -->
-        <StackPanel x:Name="CategoryModePanel" Grid.Row="1" Orientation="Vertical" Margin="0,0,0,20">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Modalità filtro categorie:"
-                           Style="{StaticResource SectionTitle}"
-                           VerticalAlignment="Center"
-                           Margin="0,0,10,0"/>
-                <RadioButton x:Name="UnionOption"
-                             Content="Unione"
-                             GroupName="CategoryMode"
-                             IsChecked="True"
-                             Margin="0,5,10,0"/>
-                <RadioButton x:Name="IntersectionOption"
-                             Content="Intersezione"
-                             Margin="0,5,0,0"
-                             GroupName="CategoryMode"/>
-            </StackPanel>
-
-            <TextBlock TextWrapping="Wrap"
-                       FontSize="12"
-                       Foreground="{StaticResource TextSecondaryBrush}"
-                       Margin="0,5,0,0">
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
                 <Run Text="- Unione: le domande possono appartenere a una qualsiasi delle categorie selezionate."/>
                 <LineBreak/>
                 <Run Text="- Intersezione: le domande devono appartenere a tutte le categorie selezionate."/>
             </TextBlock>
-<<<<<<< HEAD
             <!-- Eventuali altri controlli qui -->
         </StackPanel>  
 
@@ -115,45 +59,4 @@
             <Button Content="Conferma" Width="100" Margin="5" Click="Conferma_Click"/>  
         </StackPanel>  
     </Grid>  
-=======
-        </StackPanel>
-
-        <!-- 📋 Lista categorie wrappata in una card -->
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}">
-            <ListView x:Name="CategoryListView"
-                      BorderThickness="0"
-                      Background="Transparent">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="✓" Width="40">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <CheckBox IsChecked="{Binding Selezionata}" HorizontalAlignment="Center"/>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="Nome" DisplayMemberBinding="{Binding Nome}" Width="180"/>
-                        <GridViewColumn Header="Tipo" DisplayMemberBinding="{Binding Tipo}" Width="100"/>
-                        <GridViewColumn Header="Creatore" DisplayMemberBinding="{Binding Docente.Username}" Width="180"/>
-                    </GridView>
-                </ListView.View>
-            </ListView>
-        </Border>
-
-        <!-- ✅ Pulsanti -->
-        <StackPanel Grid.Row="3"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,10,0,0">
-            <Button Content="Annulla"
-                    Width="100"
-                    Height="40"
-                    Click="Annulla_Click"/>
-            <Button Content="Conferma"
-                    Width="120"
-                    Height="40"
-                    Click="Conferma_Click"/>
-        </StackPanel>
-    </Grid>
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 </Window>

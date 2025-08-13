@@ -1,7 +1,6 @@
 ﻿<Page x:Class="QuizClient.RegisterPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-<<<<<<< HEAD
       Title="RegisterPage">
     <Grid Background="#F0F0F0">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -48,67 +47,4 @@
             </StackPanel>
         </ScrollViewer>
     </Grid>
-=======
-      Title="RegisterPage"
-      Background="{StaticResource AppBackgroundBrush}">
-
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20">
-            <Border Style="{StaticResource CardStyle}" Width="450">
-                <StackPanel>
-
-                    <!-- Titolo -->
-                    <TextBlock Text="Registrazione" Style="{StaticResource PageTitle}" TextAlignment="Center"/>
-
-                    <!-- Ruolo -->
-                    <TextBlock Text="Ruolo" Style="{StaticResource SectionTitle}" />
-                    <ComboBox x:Name="RoleComboBox" SelectedIndex="0" Margin="0,0,0,10">
-                        <ComboBoxItem Content="Studente"/>
-                        <ComboBoxItem Content="Docente"/>
-                    </ComboBox>
-
-                    <!-- Username -->
-                    <TextBlock Text="Username" Style="{StaticResource SectionTitle}" />
-                    <TextBox x:Name="NicknameBox" Margin="0,0,0,10" />
-
-                    <!-- Email -->
-                    <TextBlock Text="Email" Style="{StaticResource SectionTitle}" />
-                    <TextBox x:Name="EmailBox" Margin="0,0,0,10" />
-
-                    <!-- Nome -->
-                    <TextBlock Text="Nome" Style="{StaticResource SectionTitle}" />
-                    <TextBox x:Name="NameBox" Margin="0,0,0,10" />
-
-                    <!-- Cognome -->
-                    <TextBlock Text="Cognome" Style="{StaticResource SectionTitle}" />
-                    <TextBox x:Name="SurnameBox" Margin="0,0,0,10" />
-
-                    <!-- Data di nascita -->
-                    <TextBlock Text="Data di nascita" Style="{StaticResource SectionTitle}" />
-                    <DatePicker x:Name="BirthDatePicker" Margin="0,0,0,10" />
-
-                    <!-- Genere -->
-                    <TextBlock Text="Genere" Style="{StaticResource SectionTitle}" />
-                    <ComboBox x:Name="GenderComboBox" Margin="0,0,0,10">
-                        <ComboBoxItem Content="Uomo" />
-                        <ComboBoxItem Content="Donna" />
-                        <ComboBoxItem Content="Altro" />
-                    </ComboBox>
-
-                    <!-- Password -->
-                    <TextBlock Text="Password" Style="{StaticResource SectionTitle}" />
-                    <PasswordBox x:Name="PasswordBox" Margin="0,0,0,10" />
-
-                    <!-- Conferma Password -->
-                    <TextBlock Text="Conferma Password" Style="{StaticResource SectionTitle}" />
-                    <PasswordBox x:Name="ConfirmPasswordBox" Margin="0,0,0,20" />
-
-                    <!-- Pulsanti -->
-                    <Button Content="Registrati" Click="RegisterUser_ClickAsync" Height="40" />
-                    <Button Content="Indietro" Click="BackToLogin_Click" Height="40" />
-                </StackPanel>
-            </Border>
-        </Grid>
-    </ScrollViewer>
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
 </Page>

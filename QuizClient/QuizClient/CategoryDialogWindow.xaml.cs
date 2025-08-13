@@ -23,10 +23,6 @@ namespace QuizClient
     public partial class CategoryDialogWindow : Window
     {
         public Categoria CategoriaCreata { get; private set; }
-<<<<<<< HEAD
-=======
-
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
         private string _jwtToken;
 
         public CategoryDialogWindow(string tk)
@@ -62,10 +58,6 @@ namespace QuizClient
             };
         }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> a8b552f97ebfc43b0b057ddd5cbe7c374024d6ba
         private void Salva_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(NomeBox.Text))
