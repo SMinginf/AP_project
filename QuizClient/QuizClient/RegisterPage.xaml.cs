@@ -27,7 +27,18 @@ namespace QuizClient
             string password = PasswordBox.Password;
             string confirmPassword = ConfirmPasswordBox.Password;
             string data_nascita = BirthDatePicker.SelectedDate?.ToString("yyyy-MM-dd") ?? string.Empty;
+            /*
+               La proprietà Content di un oggetto ComboBoxItem potrebbe essere null. Quando si tenta di chiamare il metodo ToString() 
+               su un valore null, si genera un errore. Ho aggiunto l'operatore di coalescenza nulla (??) per fornire un valore predefinito 
+               (string.Empty) nel caso in cui Content o il risultato di ToString() siano null. 
+               Questo garantisce che la variabile genere non contenga mai un valore null.
 
+               la proprietà SelectedItem di una ComboBox restituisce un oggetto di tipo object.
+               In questo caso gli elementi della ComboBox sono di tipo ComboBoxItem, quindi faccio il casting per accedere alla proprietà Content.
+
+               ? = operatore di accesso condizionale -> se il risultato del cast non è null, allora accedo alla proprietà Content, altrimenti restituisci null.
+
+            */
             if (password != confirmPassword)
             {
                 MessageBox.Show("Le password non coincidono.");

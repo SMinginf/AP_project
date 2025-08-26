@@ -6,9 +6,10 @@ type CreateQuizInput struct {
 	AICategoria     string `json:"ai_categoria"` // categoria da cui generare il quiz con AI
 	IdCategorie     []uint `json:"id_categorie" binding:"required"`
 	Difficolta      string `json:"difficolta" binding:"required,oneof=Facile Intermedia Difficile Qualsiasi"`
-	Quantita        int    `json:"quantita" binding:"required,min=3"`
+	Quantita        int    `json:"quantita" binding:"required,min=1"`
 	UsernameDocente string `json:"username_docente"` // uso l'username per riconoscere univocamente un docente. Non uso il tag `binding:"required"` perché voglio permettere che possa essere una stringa vuota
 	Unione          bool   `json:"unione"`           // true = unione, false = intersezione
+	IdQuesiti       []uint `json:"id_quesiti"`
 }
 
 // Oggetto da cui farò il parse a json per restituire un quiz generato manualmente,

@@ -5,7 +5,7 @@ from typing import Optional
 # Chiave segreta per firmare il token
 SECRET_KEY = "supersegreta123"  
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 ora
+ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 60 minuti
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     # Faccio una copia del dizionario per evitare di modificarlo direttamente

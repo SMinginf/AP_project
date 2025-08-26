@@ -1,7 +1,9 @@
 ﻿using QuizClient;
+using QuizClient.Models;
 using QuizClient.Services;
 using QuizClient.Utils;
 using System;
+using System.Data;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
@@ -36,29 +38,49 @@ namespace QuizClient
 
             TitoloTextBox.Text = $"Benvenuto, {username}";
             GestisciCategorieButton.Visibility = _ruolo == "Docente" ? Visibility.Visible : Visibility.Collapsed;
+
+            // Aggiunto SQ
+            // Mostra / nascondi i pulsanti in base al ruolo
+            QuizButton.Content = _ruolo == "Docente" ? "Crea nuovo Quiz" : "Svolgi un Quiz";
+            GestisciCategorieButton.Visibility = _ruolo == "Docente" ? Visibility.Visible : Visibility.Collapsed;
+            GestisciQuesitiButton.Visibility = _ruolo == "Docente" ? Visibility.Visible : Visibility.Collapsed;
+            ////
         }
 
+        // Aggiunto SQ
         private void CreateQuiz_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService?.Navigate(new CreateQuizPage(_jwtToken));
+            if (_ruolo == "Studente")
+            {
+                NavigationService.Navigate(new CreateQuizPage(_jwtToken, Mode.Default));
+            }
+            else if (_ruolo == "Docente")
+            {
+                NavigationService.Navigate(new ChooseQuizModePage(_jwtToken));
+            }
         }
-
         private void ManageCategories_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService?.Navigate(new CategoriesPage(_jwtToken));
+            NavigationService.Navigate(new CategoriesPage(_jwtToken));
+        }
+
+        // Aggiunto SQ
+        private void ManageQuestions_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new QuestionsPage(_jwtToken));
         }
 
         private void ProfileStats_Click(object sender, RoutedEventArgs e)
         {
             if (_ruolo == "Docente")
-                NavigationService?.Navigate(new TeacherStats(_jwtToken));
+                NavigationService.Navigate(new TeacherStats(_jwtToken));
             else if (_ruolo == "Studente")
-                NavigationService?.Navigate(new StudentStats(_jwtToken));
+                NavigationService.Navigate(new StudentStats(_jwtToken));
         }
 
         private void Logout_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService?.Navigate(new LoginPage());
+            NavigationService.Navigate(new LoginPage());
         }
     }
 }

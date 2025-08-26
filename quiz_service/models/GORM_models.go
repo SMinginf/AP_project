@@ -45,7 +45,7 @@ type Quesito struct {
 	OpCorretta int         `gorm:"column:op_corretta;not null" json:"op_corretta"`
 	IDDocente  uint        `gorm:"column:id_docente;not null" json:"id_docente"`
 	Docente    Utente      `gorm:"foreignKey:IDDocente;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"docente"`
-	Categorie  []Categoria `gorm:"many2many:categoria_quesito;" json:"categorie,omitempty"`
+	Categorie  []Categoria `gorm:"many2many:categoria_quesito;joinForeignKey:id_quesito;joinReferences:id_categoria;" json:"categorie,omitempty"`
 }
 
 func (Quesito) TableName() string {
@@ -60,7 +60,7 @@ type Categoria struct {
 	IDDocente   uint      `gorm:"column:id_docente;not null" json:"id_docente"`
 	Pubblica    bool      `gorm:"not null" json:"pubblica"`
 	Docente     Utente    `gorm:"foreignKey:IDDocente;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"docente"`
-	Quesiti     []Quesito `gorm:"many2many:categoria_quesito;" json:"quesiti,omitempty"`
+	Quesiti     []Quesito `gorm:"many2many:categoria_quesito;joinForeignKey:id_categoria;joinReferences:id_quesito;" json:"quesiti,omitempty"`
 }
 
 func (Categoria) TableName() string {

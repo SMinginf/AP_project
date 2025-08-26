@@ -3,6 +3,7 @@ using QuizClient.Services;
 using QuizClient.Utils;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,14 +21,13 @@ namespace QuizClient
         private readonly CRUDService _CRUDService;
         private readonly string _jwtToken;
         
-        private bool IsFromStatsPage = false; // Indica se la finestra è stata aperta dalla pagina delle statistiche. Mi serve per riutilizzare la pagina cambiando qualcosina.
         private string _ruolo="";
-        public CategorySelectionWindow(string jwt, bool isFromStatsPage = false)
+        public CategorySelectionWindow(string jwt, Mode m)
         {
             InitializeComponent();
             _jwtToken = jwt;
             _CRUDService = new CRUDService(_jwtToken);
-
+           
             try
             {
                 //ricavo il ruolo dell'utente dal token JWT
@@ -40,57 +40,70 @@ namespace QuizClient
                 return;
             }
 
-            IsFromStatsPage = isFromStatsPage;
 
             Personalizza();
-            CaricaCategorie();
+
+            if (m == Mode.Default)
+            {
+                CategoryModePanel.Visibility = Visibility.Collapsed;
+            }
+           
+
+            CaricaCategorie(m);
         }
 
 
         private void Personalizza()
         {
-            if (IsFromStatsPage)
-            {
-                CategoryModePanel.Visibility = Visibility.Collapsed;
+            CategoryModePanel.Visibility = Visibility.Collapsed;
 
-                if (_ruolo == "Docente") //aggiungo la colonna Visibilità solo se la finestra è stata aperta dalla pagina delle statistiche docente
+            if (_ruolo == "Docente") //aggiungo la colonna Visibilità solo se la finestra è stata aperta da un utente col ruolo di docente
+            {
+                var gridView = CategoryListView.View as GridView;
+                if (gridView != null)
                 {
-                    var gridView = CategoryListView.View as GridView;
-                    if (gridView != null)
-                    {
-                        var visibilitaColumn = new GridViewColumn
-                        {
+                    // Rimuovi la colonna con l'username del docente
+                    gridView.Columns.Remove(CreatoreColumn);
+
+                    // Aggiungi la colonna Visibilità
+                    var visibilitaColumn = new GridViewColumn
+                       {
                             Header = "Visibilità",
                             Width = 60,
                             CellTemplate = (DataTemplate)FindResource("VisibilitaCellTemplate"),
-                        };
-                        gridView.Columns.Add(visibilitaColumn);
-                    }
+                       };
+                       gridView.Columns.Add(visibilitaColumn);
                 }
-
             }
-
-
         }
-        private async void CaricaCategorie()
+
+        private async void CaricaCategorie( Mode m)
         {
             ServiceResult<List<Categoria>> result = new();
+            switch (m) {
 
-            if (IsFromStatsPage)
-            {        
-                if (_ruolo == "Studente")
-                {
-                    // Se la finestra è stata aperta dalla pagina delle statistiche studente, mostro le categorie affrontate dallo studente
-                    result = await _CRUDService.GetCategorieByStudenteAsync();
-                }
-                else if (_ruolo == "Docente")
-                {
-                    // Se la finestra è stata aperta dalla pagina delle statistiche docente, mostro tutte le categorie create dal docente
-                    result = await _CRUDService.GetCategorieByDocenteAsync(); //devo fare il get di tutte le categorie di un docente
-                }
+                case Mode.StatsPage:
+                    if (_ruolo == "Studente")
+                    {
+                        // Se la finestra è stata aperta dalla pagina delle statistiche studente, mostro le categorie affrontate dallo studente
+                        result = await _CRUDService.GetCategorieByStudenteAsync();
+                    }
+                    else if (_ruolo == "Docente")
+                    {
+                        // Se la finestra è stata aperta dalla pagina delle statistiche docente, mostro tutte le categorie create dal docente
+                        result = await _CRUDService.GetCategorieByDocenteAsync(); //devo fare il get di tutte le categorie di un docente
+                    }
+                break;
+
+                case Mode.DaFinestra:
+                    result = await _CRUDService.GetCategorieByDocenteAsync();
+                break;
+
+
+                default:
+                    result = await _CRUDService.GetCategoriePubblicheAsync();
+                break;
             }
-            else
-                result = await _CRUDService.GetCategoriePubblicheAsync();
 
             if (result.Success && result.Data != null)
             {
@@ -103,20 +116,30 @@ namespace QuizClient
                 Close();
             }
         }
-
         private void FiltraCategorie(string filtro)
         {
             _categorieFiltrate.Clear();
             foreach (var cat in _tutteLeCategorie.Where(c =>
-                c.Pubblica && (string.IsNullOrWhiteSpace(filtro) || c.Nome.Contains(filtro, System.StringComparison.OrdinalIgnoreCase))))
+             (_ruolo != "Studente" || c.Pubblica) && (string.IsNullOrWhiteSpace(filtro) || c.Nome.Contains(filtro, System.StringComparison.OrdinalIgnoreCase))))
             {
                 _categorieFiltrate.Add(cat);
             }
+
+            // SQ
+            //var categorieDaFiltrare = _tutteLeCategorie.Where(c =>
+            //(string.IsNullOrWhiteSpace(filtro) || c.Nome.Contains(filtro, StringComparison.OrdinalIgnoreCase)) &&
+            //(_ruolo != "Studente" || c.Pubblica));
+
+            //_categorieFiltrate.Clear();
+            //foreach (var cat in categorieDaFiltrare)
+            //{
+            //    _categorieFiltrate.Add(cat);
+            //}
+
+
             CategoryListView.ItemsSource = null;
             CategoryListView.ItemsSource = _categorieFiltrate;
         }
-
-
 
         private void SearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => FiltraCategorie(SearchBox.Text);
         private void FilterChanged(object sender, RoutedEventArgs e) => FiltraCategorie(SearchBox.Text);

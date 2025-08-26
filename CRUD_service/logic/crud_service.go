@@ -129,7 +129,7 @@ func DeleteQuesito(id string) error {
 func GetQuesitiByDocente(idDocente string) ([]models.Quesito, error) {
 	// [AGGIORNATO] rimosso controllo su idDocente vuoto (validato nel controller)
 	var quesiti []models.Quesito
-	if err := database.DB.Where("id_docente = ?", idDocente).Preload("Docente").Find(&quesiti).Error; err != nil {
+	if err := database.DB.Where("id_docente = ?", idDocente).Preload("Docente").Preload("Categorie").Find(&quesiti).Error; err != nil {
 		fmt.Println("Errore nel recupero dei quesiti per il docente:", err.Error())
 		return nil, fmt.Errorf("recupero quesiti per docente: %w", err)
 	}

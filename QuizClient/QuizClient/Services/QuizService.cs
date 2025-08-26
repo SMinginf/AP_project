@@ -28,7 +28,7 @@ namespace QuizClient.Services
         }
 
         // Crea quiz
-        public async Task<ServiceResult<Quiz>> CreateQuizAsync(bool AIg, string AIcat, List<uint> id_cat, bool u, string diff, int nd)
+        public async Task<ServiceResult<Quiz>> CreateQuizAsync(bool AIg, string AIcat, List<uint> id_cat, bool u, string diff, int nd, List<uint> id_ques)
         {
             var quiz_data = new
             {
@@ -38,9 +38,11 @@ namespace QuizClient.Services
                 unione = u,
                 difficolta = diff,
                 quantita = nd,
+                id_quesiti = id_ques // Aggiunto SQ 
             };
             try
             {
+
                 var response = await _client.PostAsJsonAsync("/quiz/create", quiz_data);
                 if (response.IsSuccessStatusCode)
                 {

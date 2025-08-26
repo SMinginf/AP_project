@@ -10,16 +10,16 @@
                 <StackPanel>
 
                     <!-- Titolo -->
-                    <TextBlock Text="Crea quiz" Style="{StaticResource PageTitle}" TextAlignment="Center" />
+                    <TextBlock x:Name="TitleTextBlock" Text="Crea quiz" Style="{StaticResource PageTitle}" TextAlignment="Center" />
 
                     <!-- Descrizione -->
-                    <TextBlock Text="Compila i campi per generare un nuovo quiz:"
+                    <TextBlock x:Name="DescriptionTextBlock" Text ="Compila i campi per generare un nuovo quiz:"
                                Style="{StaticResource SectionTitle}"
                                FontSize="14"
                                Margin="0,0,0,20"/>
 
                     <!-- AI Generated -->
-                    <TextBlock Text="Vuoi che il quiz sia generato dall'AI?"
+                    <TextBlock x:Name="AITextBlock" Text="Vuoi che il quiz sia generato dall'AI?"
                                Style="{StaticResource SectionTitle}" />
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <RadioButton x:Name="AIGeneratedYes" Content="Sì" GroupName="AIGenerated"
@@ -79,7 +79,7 @@
                     -->
 
                     <!-- Pulsanti finali -->
-                    <Button Content="Crea Quiz" Click="CreateQuiz_Click" Height="40" Margin="7,20,7,10"/>
+                    <Button x:Name="CreaButton" Content="Crea Quiz" Click="CreateQuiz_Click" Height="40" Margin="7,20,7,10"/>
                     <Button Content="Indietro" Click="Back_Click" Height="40"/>
 
                 </StackPanel>

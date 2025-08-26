@@ -6,6 +6,7 @@ import (
 	"errors" // [AGGIORNATO] per usare errors.Is
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +26,7 @@ func CreateQuiz(c *gin.Context) {
 		return
 	}
 
-	// [AGGIUNTO] Validazioni di input spostate qui dal service
+	// Validazioni di input spostate qui dal service
 	if input.AIGenerated {
 		// Generazione quiz tramite AI (Groq API)
 		if input.AICategoria == "" {
@@ -40,7 +41,9 @@ func CreateQuiz(c *gin.Context) {
 		}
 	}
 
-	quiz, err := logic.CreateQuiz(input)
+	isStudent := deriveIsStudent(c) // [AGGIUNTO] deriva ruolo
+
+	quiz, err := logic.CreateQuiz(input, isStudent) // [AGGIORNATO] passa il ruolo allo strato di logica
 	if err != nil {
 		c.JSON(mapErrorToStatus(err), gin.H{"error": err.Error()})
 		return
@@ -126,4 +129,11 @@ func mapErrorToStatus(err error) int {
 	default:
 		return http.StatusInternalServerError
 	}
+}
+
+// deriveIsStudent estrae un ruolo da context/header e ritorna true per studenti, false per admin/docenti.
+
+func deriveIsStudent(c *gin.Context) bool {
+	role := strings.ToLower(c.GetString("ruolo"))
+	return role == "studente"
 }

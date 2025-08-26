@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-// [AGGIORNATO] Errori sentinella per consentire al controller di mappare correttamente gli HTTP status
+// Errori sentinella per consentire al controller di mappare correttamente gli HTTP status
 var (
 	ErrBadRequest = errors.New("bad request")
 	ErrNotFound   = errors.New("not found")
@@ -22,7 +22,7 @@ var (
 
 // -------------------- BUSINESS LOGIC: CREATE QUIZ --------------------
 
-func CreateQuiz(input models.CreateQuizInput) (*models.CreateQuizOutput, error) {
+func CreateQuiz(input models.CreateQuizInput, isStudent bool) (*models.CreateQuizOutput, error) { // [AGGIORNATO] passa il ruolo
 	var quiz *models.CreateQuizOutput
 	var err error
 
@@ -38,15 +38,19 @@ func CreateQuiz(input models.CreateQuizInput) (*models.CreateQuizOutput, error) 
 	}
 
 	// Generazione manuale del quiz (con quesiti prelevati dal database)
-	// [AGGIORNATO] controllo su len(input.IdCategorie)==0 spostato nel controller
-
-	// Verifica che le categorie siano pubbliche
 	var categorie []models.Categoria
-	if err := database.DB.Where("id IN ? AND pubblica = ?", input.IdCategorie, true).Find(&categorie).Error; err != nil {
+	qu := database.DB.Where("id IN ?", input.IdCategorie)
+	if isStudent {
+		qu = qu.Where("pubblica = ?", true)
+	}
+	if err := qu.Find(&categorie).Error; err != nil {
 		return nil, fmt.Errorf("errore nella verifica delle categorie: %w", err)
 	}
 	if len(categorie) != len(input.IdCategorie) {
-		return nil, wrap(ErrNotFound, "Alcune categorie specificate non esistono o non sono pubbliche")
+		if isStudent {
+			return nil, wrap(ErrNotFound, "Alcune categorie specificate non esistono o non sono pubbliche")
+		}
+		return nil, wrap(ErrNotFound, "Alcune categorie specificate non esistono")
 	}
 
 	if input.Unione {
@@ -65,9 +69,15 @@ func createQuizByUnion(input models.CreateQuizInput) (*models.CreateQuizOutput, 
 
 	for _, catID := range input.IdCategorie {
 		var catQuesiti []models.Quesito
-		q := database.DB.
-			Joins("JOIN categoria_quesito cq ON cq.id_quesito = quesiti.id").
-			Where("cq.id_categoria = ?", catID)
+
+		q := database.DB.Preload("Categorie"). // [AGGIORNATO] Preload per caricare le categorie associate
+							Joins("JOIN categoria_quesito cq ON cq.id_quesito = quesiti.id").
+							Where("cq.id_categoria = ?", catID)
+
+		if len(input.IdQuesiti) > 0 { // [AGGIUNTO] Reroll: escludi i già usati
+			q = q.Where("quesiti.id NOT IN ?", input.IdQuesiti)
+		}
+		// Aggiungi eventuali filtri aggiuntivi
 		if input.Difficolta != "Qualsiasi" {
 			q = q.Where("quesiti.difficolta = ?", input.Difficolta)
 		}
@@ -185,12 +195,16 @@ func createQuizByIntersection(input models.CreateQuizInput) (*models.CreateQuizO
 
 	query := database.DB.Where("id IN (?)", subQuery)
 
+	if len(input.IdQuesiti) > 0 { // [AGGIUNTO] Reroll: escludi i già usati
+		query = query.Where("quesiti.id NOT IN ?", input.IdQuesiti)
+	}
+
 	if input.Difficolta != "Qualsiasi" {
 		query = query.Where("quesiti.difficolta = ?", input.Difficolta)
 	}
 
 	var quesiti []models.Quesito
-	err := query.Order("RAND()").Limit(input.Quantita).Find(&quesiti).Error
+	err := query.Preload("Categorie").Order("RAND()").Limit(input.Quantita).Find(&quesiti).Error
 	if err != nil {
 		return nil, fmt.Errorf("errore nel recupero delle domande: %w", err)
 	}

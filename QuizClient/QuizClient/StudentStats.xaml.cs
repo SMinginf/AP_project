@@ -447,7 +447,7 @@ namespace QuizClient
         }
 
         private void ChooseCategories_Click(object sender, RoutedEventArgs e) {
-            var selettore = new CategorySelectionWindow(_jwtToken, true);
+            var selettore = new CategorySelectionWindow(_jwtToken, Mode.StatsPage);
             if (selettore.ShowDialog() == true && selettore.Selezionate != null)
             {
                 _categorieSelezionate = selettore.Selezionate;

@@ -68,7 +68,6 @@ namespace QuizClient
                 FiltroPrivate.IsChecked = false;
             FiltraCategorie(SearchBox?.Text ?? string.Empty);
         }
-
         private void FiltroPrivata_Checked(object sender, RoutedEventArgs e)
         {
             // Se si seleziona "Solo private", deseleziona "Solo pubbliche"
@@ -187,7 +186,7 @@ namespace QuizClient
 
                 if (result.Success)
                 {
-                    MessageBox.Show("Categorie eliminate con successo!", "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Categorie eliminate con successWo!", "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
                     // Rimuovi localmente le categorie selezionate
                     foreach (var cat in selezionate)
                     {

@@ -26,7 +26,7 @@ namespace QuizClient.Services
             _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
         }
 
-
+        // Servizi CRUD per le categorie
         public async Task<ServiceResult<List<Categoria>>> GetCategoriePubblicheAsync()
         {
             try
@@ -67,7 +67,6 @@ namespace QuizClient.Services
                 return new ServiceResult<List<Categoria>> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
             }
         }
-
         public async Task<ServiceResult<List<Categoria>>> GetCategorieByStudenteAsync()
         {
             try 
@@ -110,9 +109,51 @@ namespace QuizClient.Services
                 return new ServiceResult<List<Categoria>> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
             }
         }
+        // Aggiunto SQ
+        public async Task<ServiceResult<List<Categoria>>> GetCategorieByDocenteAndNomeAsync(string nome)
+        {
+            try
+            {
+                var id_docente = JwtUtils.GetClaimAsUInt(_jwtToken, "user_id");
 
+                var response = await _client.GetAsync($"/categorie/docente/{id_docente}?categoria={nome}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<List<Categoria>>() ?? new List<Categoria>();
+                    return new ServiceResult<List<Categoria>> { Data = data };
+                }
+                else
+                {
+                    // Legge il contenuto della risposta HTTP come stringa (di solito JSON con dettagli dell'errore)
+                    var error = await response.Content.ReadAsStringAsync();
 
+                    // Prepara un messaggio di errore generico con il codice di stato HTTP
+                    string? errorMsg = $"Errore HTTP {response.StatusCode}";
+                    try
+                    {
+                        // Prova a interpretare la stringa come JSON
+                        using var doc = JsonDocument.Parse(error);
 
+                        // Se il JSON contiene una proprietà "error", usa il suo valore come messaggio di errore
+                        if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                            errorMsg = errorProp.GetString() ?? errorMsg;
+                    }
+                    catch
+                    {
+                        // Se il parsing fallisce, mantiene il messaggio di errore generico
+                    }
+                    return new ServiceResult<List<Categoria>> { ErrorMessage = errorMsg };
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ServiceResult<List<Categoria>> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<List<Categoria>> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
+            }
+        }
         public async Task<ServiceResult<List<Categoria>>> GetCategoriePubblicheByDocenteAsync() { 
             
             try
@@ -199,7 +240,6 @@ namespace QuizClient.Services
                 return new ServiceResult<List<Categoria>> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
             }
         }
-
         public async Task<ServiceResult<Categoria>> CreateCategoriaAsync(Categoria categoria)
         {
             try
@@ -235,7 +275,6 @@ namespace QuizClient.Services
                 return new ServiceResult<Categoria> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
             }
         }
-
         public async Task<ServiceResult<Categoria>> UpdateCategoriaAsync(Categoria categoria)
         {
             try
@@ -271,9 +310,6 @@ namespace QuizClient.Services
                 return new ServiceResult<Categoria> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
             }
         }
-
-
-
         public async Task<ServiceResult<bool>> DeleteCategoriaAsync(List<uint> ids)
         {
             try
@@ -315,6 +351,167 @@ namespace QuizClient.Services
             }
         }
 
+
+
+        // Aggiunto SQ
+        // Servizi CRUD per i quesiti 
+        public async Task<ServiceResult<List<Quesito>>> GetQuesitiByDocenteAsync()
+        {
+            try
+            {
+                var id_docente = JwtUtils.GetClaimAsUInt(_jwtToken, "user_id");
+                var response = await _client.GetAsync($"/quesiti/docente/{id_docente}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<List<Quesito>>() ?? new List<Quesito>();
+                    return new ServiceResult<List<Quesito>> { Data = data };
+                }
+                else
+                {
+                    // Legge il contenuto della risposta HTTP come stringa (di solito JSON con dettagli dell'errore)
+                    var error = await response.Content.ReadAsStringAsync();
+
+                    // Prepara un messaggio di errore generico con il codice di stato HTTP
+                    string? errorMsg = $"Errore HTTP {response.StatusCode}";
+                    try
+                    {
+                        // Prova a interpretare la stringa come JSON
+                        using var doc = JsonDocument.Parse(error);
+
+                        // Se il JSON contiene una proprietà "error", usa il suo valore come messaggio di errore
+                        if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                            errorMsg = errorProp.GetString() ?? errorMsg;
+                    }
+                    catch
+                    {
+                        // Se il parsing fallisce, mantiene il messaggio di errore generico
+                    }
+                    return new ServiceResult<List<Quesito>> { ErrorMessage = errorMsg };
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ServiceResult<List<Quesito>> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<List<Quesito>> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
+            }
+        }
+        public async Task<ServiceResult<Quesito>> UpdateQuesitoAsync(Quesito quesito)
+        {
+            try
+            {
+                var response = await _client.PutAsJsonAsync($"/quesiti/update", quesito);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<Quesito>();
+                    return new ServiceResult<Quesito> { Data = data };
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    string? errorMsg = $"Errore HTTP {response.StatusCode}";
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(error);
+                        if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                            errorMsg = errorProp.GetString() ?? errorMsg;
+                    }
+                    catch
+                    {
+                    }
+                    return new ServiceResult<Quesito> { ErrorMessage = errorMsg };
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ServiceResult<Quesito> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<Quesito> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
+            }
+        }
+        public async Task<ServiceResult<Quesito>> CreateQuesitoAsync(Quesito quesito)
+        {
+            try
+            {
+                var response = await _client.PostAsJsonAsync("/quesiti/create", quesito);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<Quesito>();
+                    return new ServiceResult<Quesito> { Data = data };
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    string? errorMsg = $"Errore HTTP {response.StatusCode}";
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(error);
+                        if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                            errorMsg = errorProp.GetString() ?? errorMsg;
+                    }
+                    catch
+                    {
+                    }
+                    return new ServiceResult<Quesito> { ErrorMessage = errorMsg };
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ServiceResult<Quesito> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<Quesito> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
+            }
+        }
+        public async Task<ServiceResult<bool>> DeleteQuesitoAsync(List<uint> ids)
+        {
+            try
+            {
+                // Non esiste un metodo DeleteAsJsonAsync, quindi si usa HttpRequestMessage per inviare una richiesta DELETE con il corpo JSON
+                var request = new HttpRequestMessage(HttpMethod.Delete, "/quesiti/delete")
+                {
+                    Content = JsonContent.Create(ids) // ids è la lista di ID da inviare
+                };
+                var response = await _client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return new ServiceResult<bool> { Data = true };
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    string? errorMsg = $"Errore HTTP {response.StatusCode}";
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(error);
+                        if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                            errorMsg = errorProp.GetString() ?? errorMsg;
+                    }
+                    catch
+                    {
+                    }
+                    return new ServiceResult<bool> { ErrorMessage = errorMsg };
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ServiceResult<bool> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<bool> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
+            }
+        }
+
+        
+        // Servizi CRUD per gli utenti
         public async Task<ServiceResult<Utente>> GetUserAsync() { 
                 try
                 {

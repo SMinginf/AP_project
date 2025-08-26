@@ -1,7 +1,21 @@
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace QuizClient.Models
 {
+    // Enum per le funzionalità del client
+    // Modificato SQ
+    public enum Mode
+    {
+        Default,
+        DaFinestra, // Indica che la finestra è stata aperta dalla pagina di gestione di un quesito (quindi, l'utente è un docente)
+        Reroll_AI,
+        Reroll_AI_DB,
+        StatsPage, // Indica che la finestra è stata aperta dalla pagina delle statistiche
+        FromQuestionsPage, // Indica che la finestra è stata aperta dalla pagina di gestione dei quesiti
+        FromQuizManagerPage, // Indica che la finestra è stata aperta dalla pagina di gestione dei quiz
+    }
+
     // Classi che rispecchiano le strutture dei JSON restituiti dal server: C# client <-- JSON -- Server
     public class Quiz
     {
@@ -24,8 +38,11 @@ namespace QuizClient.Models
         
     }
 
-    public class Quesito
+    public class Quesito : INotifyPropertyChanged // Modificato SQ
     {
+        // Modificato SQ
+        private bool _selezionato;
+
         [JsonPropertyName("id")]
         public uint ID { get; set; }
 
@@ -54,10 +71,30 @@ namespace QuizClient.Models
         public uint IDDocente { get; set; }
 
         [JsonPropertyName("docente")]
-        public Utente Docente { get; set; } = new Utente();
+        public Utente? Docente { get; set; } //Modificato SQ
 
         [JsonPropertyName("categorie")]
         public List<Categoria> Categorie { get; set; } = new();
+
+        //Modificato SQ
+        //Gestione della selezione del quesito nella UI
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        public bool Selezionato
+        {
+            get => _selezionato;
+            set
+            {
+                if (_selezionato != value) // Controlla se il valore è cambiato
+                {
+                    _selezionato = value;
+                    OnPropertyChanged(nameof(Selezionato)); // Notifica la UI
+                }
+            }
+        } // Per bind alla checkbox
     }
 
 
@@ -94,8 +131,10 @@ namespace QuizClient.Models
         public List<Categoria>? Categorie { get; set; }
     }
 
-    public class Categoria
+    public class Categoria : INotifyPropertyChanged // Modificato SQ
     {
+        private bool _selezionata;
+
         [JsonPropertyName("id")]
         public uint ID { get; set; }
 
@@ -120,7 +159,28 @@ namespace QuizClient.Models
         [JsonPropertyName("quesiti")]
         public List<Quesito>? Quesiti { get; set; }
 
-        public bool Selezionata { get; set; } // Per bind alla checkbox
+        // Modificato SQ: sostituito Selezionata con _selezionata e OnPropertyChanged
+        //public bool Selezionata { get; set; } // Per bind alla checkbox
+
+        // Modificato SQ
+        //Gestione della selezione del quesito nella UI
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        public bool Selezionata
+        {
+            get => _selezionata;
+            set
+            {
+                if (_selezionata != value) // Controlla se il valore è cambiato
+                {
+                    _selezionata = value;
+                    OnPropertyChanged(nameof(Selezionata)); // Notifica la UI
+                }
+            }
+        } // Per bind alla checkbox
 
         public override string ToString()
         {

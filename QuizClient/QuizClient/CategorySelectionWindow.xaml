@@ -74,7 +74,7 @@
                         </GridViewColumn>
                         <GridViewColumn Header="Nome" DisplayMemberBinding="{Binding Nome}" Width="180"/>
                         <GridViewColumn Header="Tipo" DisplayMemberBinding="{Binding Tipo}" Width="100"/>
-                        <GridViewColumn Header="Creatore" DisplayMemberBinding="{Binding Docente.Username}" Width="180"/>
+                        <GridViewColumn  x:Name="CreatoreColumn"  Header="Creatore" DisplayMemberBinding="{Binding Docente.Username}" Width="180"/>
                     </GridView>
                 </ListView.View>
             </ListView>
