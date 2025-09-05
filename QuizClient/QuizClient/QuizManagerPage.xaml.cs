@@ -10,6 +10,7 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Linq;
+using System.Printing;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -36,6 +37,8 @@ namespace QuizClient
 
 
         private List<Quesito> TuttiQuesiti = new List<Quesito>();
+        private List<Quesito> QuesitiSelezionati = new List<Quesito>(); // Quesiti selezionati per generare l'esame
+
         private List<int> _indice_quesiti = new List<int>();
         private List<int> _indici_non_sostituiti = new List<int>();
         private List<uint> _id_quesiti = new List<uint>();
@@ -237,6 +240,39 @@ namespace QuizClient
             }
 
         }
+
+        // Metodo per generare copie differenti dell'esame in base ai quesiti selezionati
+        private async void GeneraEsame_Click(object sender, RoutedEventArgs e) {
+            var conferma = new ExamGenerationWindow();
+            if (conferma.ShowDialog() == true) {
+                foreach (var que in QuesitiQuiz)
+                {
+                    // Se il quesito è selezionato
+                    if (que.Selezionato)
+                    {
+                        QuesitiSelezionati.Add(que);
+                    }
+                }
+
+                if (QuesitiSelezionati.Count >=3) {
+                    var result = await _quizService.GenerateAndDownloadExamsZipAsync(conferma.Copie, QuesitiSelezionati);
+                    if (result.Success)
+                    {
+                        MessageBox.Show($"Esami generati e scaricati con successo al path: {result.Data}", "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show(result.ErrorMessage ?? "Errore nella generazione degli esami.", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                else {
+                    MessageBox.Show("Devi selezionare almeno 3 quesiti per generare un esame.", "Attenzione", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            else { return; }
+        }
+        
         // Metodo per selezionare tutti i quesiti nella griglia
         private void SelezionaTutteLeCheckbox_Click(object sender, RoutedEventArgs e)
         {
