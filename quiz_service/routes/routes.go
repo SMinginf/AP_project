@@ -20,21 +20,5 @@ func SetupRoutes(router *gin.Engine) {
 
 		groupRoutes.POST("/exams", handlers.GenerateExams)
 
-		// POST /sessions/join → Partecipa a una sessione esistente
-		//groupRoutes.POST("/join", handlers.JoinSession)
-
-		// GET /sessions/list → Lista tutte le sessioni
-		//groupRoutes.GET("/list", handlers.ListSessions)
-
-		// GET /sessions/:id → Ottieni i dettagli di una sessione specifica
-		//groupRoutes.GET("/:id", handlers.GetSessionById)
-
-		// POST /sessions/leave → Lascia la sessione corrente
-		// Uso POST e non DELETE perchè non sto cancellando una risorsa server-side.
-		// L’utente non sta cancellando la sessione. Sta solo eseguendo un’azione lato server:
-		// "voglio lasciare questa sessione" → un evento, non una rimozione di risorsa.
-		//groupRoutes.POST("/leave", handlers.LeaveSession)
-
-		//groupRoutes.POST("/:id/start", handlers.StartRequest)
 	}
 }

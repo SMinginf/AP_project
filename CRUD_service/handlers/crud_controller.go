@@ -189,20 +189,22 @@ func UpdateQuesito(c *gin.Context) {
 func DeleteQuesito(c *gin.Context) {
 	ruolo, exists := c.Get("ruolo")
 	if !exists || ruolo != "Docente" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Solo i docenti possono cancellare i quesiti"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "Solo i docenti possono cancellare quesiti"})
 		return
 	}
 
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID del quesito mancante"})
+	var ids []uint
+	if err := c.ShouldBindJSON(&ids); err != nil || len(ids) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Devi specificare almeno un ID di quesito da cancellare"})
 		return
 	}
-	if err := logic.DeleteQuesito(id); err != nil { // [AGGIUNTO]
-		c.JSON(mapErrorToStatus(err), gin.H{"error": "Errore nella cancellazione del quesito"})
+
+	if err := logic.DeleteQuesito(ids); err != nil { // [AGGIUNTO]
+		c.JSON(mapErrorToStatus(err), gin.H{"error": "Errore nella cancellazione dei quesiti"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Quesito cancellato con successo"})
+
+	c.JSON(http.StatusOK, gin.H{"message": "Quesiti cancellati con successo"})
 }
 
 func GetQuesitiByDocente(c *gin.Context) {

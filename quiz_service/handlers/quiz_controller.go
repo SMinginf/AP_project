@@ -107,14 +107,23 @@ func GenerateExams(c *gin.Context) {
 		_ = pw.CloseWithError(err)
 	}()
 
-	// Preparazione risposta HTTP
+	// // Preparazione risposta HTTP
 	c.Header("Content-Type", "application/zip") // dice al client che sta arrivando uno ZIP
-	c.Status(http.StatusOK)                     // invia lo status code e blocca le intestazioni. Il body partirà con la prima scrittura.
+	c.Set("Transfer-Encoding", "chunked")
+	c.Status(http.StatusOK) // invia lo status code e blocca le intestazioni. Il body partirà con la prima scrittura.
 
-	// io.Copy legge dalla pipe e scrive nella risposta pezzo per pezzo (chunked transfer encoding).
-	// c.Writer è la connessione HTTP verso il client, pr è la pipe reader che riceve i dati generati dalla goroutine.
-	// Così il client inizia a ricevere lo ZIP mentre viene creato, senza aspettare la fine.
+	// // io.Copy legge dalla pipe e scrive nella risposta pezzo per pezzo (chunked transfer encoding).
+	// // c.Writer è la connessione HTTP verso il client, pr è la pipe reader che riceve i dati generati dalla goroutine.
+	// // Così il client inizia a ricevere lo ZIP mentre viene creato, senza aspettare la fine.
 	_, _ = io.Copy(c.Writer, pr)
+
+	// c.Header("Content-Type", "application/zip")
+	// c.Status(http.StatusOK)
+
+	// if err := logic.GenerateExamZIP(req.Questions, req.N, c.Writer); err != nil {
+	// 	c.Status(http.StatusInternalServerError)
+	// 	return
+	// }
 }
 
 // -------------------- helpers controller --------------------

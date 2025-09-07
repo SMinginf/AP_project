@@ -9,118 +9,135 @@
         <utils:OpCorrettaToStringConverter x:Key="OpCorrettaToStringConverter"/>
     </Page.Resources>
 
-    <!--Grid sottofondo -->
-    <Grid Background="White" Height="600" Width="800" Margin="20">
+    <Grid Background="{StaticResource AppBackgroundBrush}" Margin="30">
         <Grid.RowDefinitions>
-            <!-- Titolo -->
             <RowDefinition Height="Auto"/>
-            <!-- Barra di ricerca -->
-            <RowDefinition Height="Auto" MinHeight="25"/>
-            <!--Lista quesiti da gestire-->
-            <RowDefinition Height="Auto" MinHeight="480"/>
-            <!-- Bottoni -->
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- 📘 Titolo -->
-        <TextBlock Grid.Row= "0" Text="Gestione Quiz" FontSize="24" FontWeight="Bold" Margin="5,0,0,10"/>
-        <!-- 🔍 Campo di ricerca -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5">
-            <TextBlock Text="Cerca testo:" VerticalAlignment="Center" Margin="2,0,10,0"/>
+        <TextBlock Grid.Row="0"
+                   Text="Gestione Quiz"
+                   Style="{StaticResource PageTitle}"/>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20" HorizontalAlignment="Left">
+            <TextBlock Text="Cerca testo:"
+                       VerticalAlignment="Center"
+                       Style="{StaticResource SectionTitle}"
+                       Margin="0,0,10,0"/>
             <TextBox x:Name="SearchBox"
-              Margin="2,0,280,0"
-              Width="250"
-              TextChanged="SearchBox_TextChanged"
-              ToolTip="Cerca parole chiave"/>
+                     Width="250"
+                     Height="30"
+                     VerticalContentAlignment="Center"
+                     TextChanged="SearchBox_TextChanged"
+                     ToolTip="Cerca parole chiave"/>
         </StackPanel>
-        <!-- 📋 Elenco categorie -->
-        <DataGrid x:Name="QuesitiQuizGrid" Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True" Margin="10,16,10,10"
-                    MinHeight="200" MouseDoubleClick="QuesitiQuizGrid_MouseDoubleClick" SelectionMode="Single">
-            <DataGrid.Resources>
 
-                <!-- Celle senza evidenziazione -->
-                <Style TargetType="DataGridCell">
-                    <Setter Property="Background" Value="White"/>
-                    <Setter Property="Foreground" Value="Black"/>
-                    <Setter Property="BorderBrush" Value="LightGray"/>
-                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                    <Style.Triggers>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="White"/>
-                            <Setter Property="Foreground" Value="Black"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </DataGrid.Resources>
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+            <ListView x:Name="QuesitiListView"
+                      BorderThickness="0"
+                      Background="Transparent"
+                      SelectionMode="Single"
+                      MouseDoubleClick="QuesitiListView_MouseDoubleClick">
+                <ListView.View>
+                    <GridView>
+                        <!-- Colonna Checkbox -->
+                        <GridViewColumn Header="✓" Width="40">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding Selezionato}" HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        
+                        <GridViewColumn Header="Testo" Width="200">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Testo}"
+                                               TextTrimming="CharacterEllipsis"
+                                               TextWrapping="NoWrap"
+                                               VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
 
-            <!-- Righe senza sfondo selezione -->
-            <DataGrid.RowStyle>
-                <Style TargetType="DataGridRow">
-                    <Setter Property="Background" Value="White"/>
-                    <Setter Property="Foreground" Value="Black"/>
-                    <Setter Property="BorderBrush" Value="LightGray"/>
+                        <GridViewColumn Header="A" Width="100">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding OpzioneA}" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
 
-                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                    <Style.Triggers>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="White"/>
-                            <Setter Property="Foreground" Value="Black"/>
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#FFF5F5F5"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </DataGrid.RowStyle>
+                        <GridViewColumn Header="B" Width="100">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding OpzioneB}" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
 
-            <DataGrid.Columns>
-                <DataGridTemplateColumn Width="35">
-                    <DataGridTemplateColumn.Header>
-                        <CheckBox Click="SelezionaTutteLeCheckbox_Click"/>
-                    </DataGridTemplateColumn.Header>
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <CheckBox IsChecked="{Binding Selezionato, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Testo" Width="2*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Testo}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" VerticalAlignment="Center" Height="22"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                        <GridViewColumn Header="C" Width="100">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding OpzioneC}" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
 
-                <DataGridTextColumn Header="A" Binding="{Binding OpzioneA}" Width="Auto"/>
-                <DataGridTextColumn Header="B" Binding="{Binding OpzioneB}" Width="Auto"/>
-                <DataGridTextColumn Header="C" Binding="{Binding OpzioneC}" Width="Auto"/>
-                <DataGridTextColumn Header="D" Binding="{Binding OpzioneD}" Width="Auto"/>
-                <DataGridTemplateColumn Header="Corretta" Width="*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding OpCorretta, Converter={StaticResource OpCorrettaToStringConverter}}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" VerticalAlignment="Center" Height="22"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                        <GridViewColumn Header="D" Width="100">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding OpzioneD}" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
 
-                <DataGridTextColumn Header="Difficoltà" Binding="{Binding Difficolta}" Width="*"/>
-                <DataGridTemplateColumn Header="Categorie" Width="*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Categorie,Converter={StaticResource CategoriaToStringConverter}}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" VerticalAlignment="Center" Height="22"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
-        <!-- 🔘 Pulsanti -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="10,0,10,0" HorizontalAlignment="Left" Width="Auto" Height="50" VerticalAlignment="Center">
-            <Button Content="⬅️ Indietro" Width="80" Height="32" Margin=" 0,0,380,0" Click="Back_Click" />
-            <Button Content="Genera testo d'esame" Width="150" Height="32" Margin=" 0,0,10,0"/> <!--Click="Back_Click"--> 
-            <Button Content="Sostituisci quesiti selezionati" Width="160" Height="32" Click="Reroll_Click"/>
+                        <GridViewColumn Header="Corretta" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding OpCorretta, Converter={StaticResource OpCorrettaToStringConverter}}"
+                                               TextTrimming="CharacterEllipsis"
+                                               TextWrapping="NoWrap"
+                                               VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="Difficoltà" Width="100">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Difficolta}" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="Categorie" Width="150">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Categorie, Converter={StaticResource CategoriaToStringConverter}}"
+                                               TextTrimming="CharacterEllipsis"
+                                               TextWrapping="NoWrap"
+                                               VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Border>
+
+        <StackPanel Grid.Row="3"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,10,0,0">
+            <Button Content="⬅️ Indietro" Height="40" Width="80"
+                    Click="Back_Click"/>
+            <Button Content="Genera schede d'esame" Height="40" Width="160"
+                    Click="GeneraEsame_Click"/>
+            <Button Content="Sostituisci quesiti selezionati" Height="40" Width="190"
+                    Click="Reroll_Click"/>
         </StackPanel>
     </Grid>
 </Page>
-            

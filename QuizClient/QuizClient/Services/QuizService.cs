@@ -142,8 +142,12 @@ namespace QuizClient.Services
             try
             {
                 // Costruisci percorso automatico in cui salvare i file: <base>/exams/exams_YYYYMMDD_HHMMSS.zip
-                var baseDir = AppContext.BaseDirectory;                  // cartella dell’eseguibile
-                var examsDir = Path.Combine(baseDir, "exams");           // <base>/exams
+                var exeDir = AppContext.BaseDirectory;                  // cartella dell’eseguibile
+
+                // Risali di tre livelli per raggiungere la radice del progetto.
+                var projectRoot = Path.GetFullPath(Path.Combine(exeDir, "..", "..", ".."));
+
+                var examsDir = Path.Combine(projectRoot, "exams");           
                 Directory.CreateDirectory(examsDir);                     // crea se non esiste
 
                 var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");

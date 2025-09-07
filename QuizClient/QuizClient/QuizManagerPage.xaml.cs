@@ -68,7 +68,7 @@ namespace QuizClient
 
             //Validazione del token JWT per assicurarsi che l'utente sia un docente
             Utils.JwtUtils.ValidateDocenteRole(_jwtToken, this.NavigationService, this);
-            QuesitiQuizGrid.ItemsSource = QuesitiQuiz;
+            QuesitiListView.ItemsSource = QuesitiQuiz;
             //Inizializza la lista dei quiz
             CaricaQuesitiQuiz();
 
@@ -128,14 +128,13 @@ namespace QuizClient
             FiltraQuesiti(filtro);
         }
         //Metodo per aprire un quesito e modificarlo per il quiz
-        private void QuesitiQuizGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void QuesitiListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             // Verifica che il doppio click sia su una riga e non sull'header
-            var row = ItemsControl.ContainerFromElement(QuesitiQuizGrid, e.OriginalSource as DependencyObject) as DataGridRow;
-            if (row == null)
-                return;
+            var listViewItem = ItemsControl.ContainerFromElement(QuesitiListView, e.OriginalSource as DependencyObject) as ListViewItem;
 
-            if (row.Item is Quesito selezionato)
+
+            if (listViewItem != null && listViewItem.DataContext is Quesito selezionato)
             {
                 var finestra = new QuestionDialogWindow(selezionato, _jwtToken, Mode.FromQuizManagerPage);
                 if (finestra.ShowDialog() == true)
@@ -269,27 +268,29 @@ namespace QuizClient
                     MessageBox.Show("Devi selezionare almeno 3 quesiti per generare un esame.", "Attenzione", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
+
+                QuesitiSelezionati.Clear(); // Pulisce la lista per future generazioni di esami
             }
             else { return; }
         }
         
         // Metodo per selezionare tutti i quesiti nella griglia
-        private void SelezionaTutteLeCheckbox_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is CheckBox headerCheckBox)
-            {
-                bool seleziona = headerCheckBox.IsChecked == true;
+        //private void SelezionaTutteLeCheckbox_Click(object sender, RoutedEventArgs e)
+        //{
+        //    if (sender is CheckBox headerCheckBox)
+        //    {
+        //        bool seleziona = headerCheckBox.IsChecked == true;
 
-                // Imposta la proprietà Selezionato di tutti i quesiti mostrati nella griglia
-                foreach (var que in QuesitiQuiz)
-                {
-                    que.Selezionato = seleziona;
-                }
+        //        // Imposta la proprietà Selezionato di tutti i quesiti mostrati nella griglia
+        //        foreach (var que in QuesitiQuiz)
+        //        {
+        //            que.Selezionato = seleziona;
+        //        }
 
-                // Aggiorna la DataGrid (notifica il binding)
-                // QuesitiQuizGrid.Items.Refresh();
-            }
-        }
+        //        // Aggiorna la DataGrid (notifica il binding)
+        //        // QuesitiQuizGrid.Items.Refresh();
+        //    }
+        //}
         // Metodo per tornare indietro
         private void Back_Click(object sender, RoutedEventArgs e)
         {

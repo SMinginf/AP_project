@@ -5,6 +5,7 @@ import (
 	"AP_project/quiz_service/models"
 	"AP_project/quiz_service/utils"
 	"archive/zip"
+	"bytes"
 	"encoding/csv"
 	"errors" // [AGGIORNATO] per esporre errori sentinella e permettere al controller di usare errors.Is
 	"fmt"
@@ -289,7 +290,7 @@ func findCorrectLabel(ops []option) string {
 }
 
 func writeQuestion(w io.Writer, num int, q models.Quesito, ops []option) error {
-	if _, err := io.WriteString(w, fmt.Sprintf("Domanda %d:\n%s\n", num, q.Testo)); err != nil {
+	if _, err := io.WriteString(w, fmt.Sprintf("Quesito %d:\n%s\n", num, q.Testo)); err != nil {
 		return err
 	}
 	for _, op := range ops {
@@ -303,99 +304,101 @@ func writeQuestion(w io.Writer, num int, q models.Quesito, ops []option) error {
 
 func shuffledOptions(r *rand.Rand, q models.Quesito) []option {
 	ops := []option{
-		{Label: "A", Text: q.OpzioneA, IsCorrect: q.OpCorretta == 0},
-		{Label: "B", Text: q.OpzioneB, IsCorrect: q.OpCorretta == 1},
-		{Label: "C", Text: q.OpzioneC, IsCorrect: q.OpCorretta == 2},
-		{Label: "D", Text: q.OpzioneD, IsCorrect: q.OpCorretta == 3},
+		{Label: "", Text: q.OpzioneA, IsCorrect: q.OpCorretta == 0},
+		{Label: "", Text: q.OpzioneB, IsCorrect: q.OpCorretta == 1},
+		{Label: "", Text: q.OpzioneC, IsCorrect: q.OpCorretta == 2},
+		{Label: "", Text: q.OpzioneD, IsCorrect: q.OpCorretta == 3},
 	}
 	r.Shuffle(len(ops), func(i, j int) { ops[i], ops[j] = ops[j], ops[i] })
+
+	// Assegna le etichette in ordine A/B/C/D dopo lo shuffle
+	labels := []string{"A", "B", "C", "D"}
+
+	for i := range ops {
+		ops[i].Label = labels[i]
+	}
+
 	return ops
 }
 
 func GenerateExamZIP(questions []models.Quesito, n int, w io.Writer) (retErr error) {
-	// Validazioni input
-	// [AGGIORNATO] i controlli su n<=0 e len(questions)==0 sono stati spostati nel controller.
-	// Manteniamo solo la difesa su writer nullo, che è una precondizione di programmazione.
 	if w == nil {
 		return wrap(ErrBadRequest, "writer nullo")
 	}
 
-	// RNG basato sull'orologio (random diverso ad ogni chiamata)
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-	// ZIP writer sul writer in streaming
 	zw := zip.NewWriter(w)
 
-	// Defer: chiusura ZIP (deve avvenire DOPO il flush del CSV)
+	// Defer 1: chiusura ZIP
 	defer func() {
 		if cerr := zw.Close(); cerr != nil && retErr == nil {
 			retErr = fmt.Errorf("chiusura zip: %w", cerr)
 		}
+		fmt.Println("[DEBUG] ZIP chiuso correttamente")
 	}()
 
-	// File delle soluzioni dentro lo ZIP
-	solutionsFile, err := zw.Create("soluzioni.csv")
-	if err != nil {
-		return fmt.Errorf("creazione soluzioni.csv: %w", err)
-	}
-	cw := csv.NewWriter(solutionsFile)
+	// Crea un buffer in memoria per il CSV
+	var csvBuffer bytes.Buffer
+	cw := csv.NewWriter(&csvBuffer)
+	cw.Comma = ';'
+	cw.UseCRLF = true
 
-	// Defer: Flush del CSV (deve avvenire PRIMA della chiusura ZIP)
-	defer func() {
-		cw.Flush()
-		if ferr := cw.Error(); ferr != nil && retErr == nil {
-			retErr = fmt.Errorf("flush soluzioni.csv: %w", ferr)
-		}
-	}()
-
-	// Scrittura intestazione soluzioni.csv
-	if err := cw.Write([]string{"scheda", "domanda", "risposta"}); err != nil {
+	// Scrittura intestazione e righe delle soluzioni nel buffer in memoria
+	if err := cw.Write([]string{"SCHEDA", "QUESITO", "RISPOSTA CORRETTA"}); err != nil {
 		return fmt.Errorf("scrittura header soluzioni.csv: %w", err)
 	}
 
 	// Generazione schede
 	for i := 1; i <= n; i++ {
-		// Copia + shuffle dell’elenco domande per questa scheda
 		shuffled := copyAndShuffle(r, questions)
 
-		// Nuovo file nello ZIP per la scheda i
 		entry, err := zw.Create(fmt.Sprintf("scheda_%d.txt", i))
 		if err != nil {
 			return fmt.Errorf("creazione scheda_%d.txt: %w", i, err)
 		}
 
-		// Intestazione scheda
 		if _, err := io.WriteString(entry,
 			fmt.Sprintf("Scheda d'esame #%d\n=====================================\n\n", i),
 		); err != nil {
 			return fmt.Errorf("scrittura intestazione scheda_%d: %w", i, err)
 		}
 
-		// Domande
 		for qIdx, q := range shuffled {
 			ops := shuffledOptions(r, q)
 
-			// Scrivi domanda+opzioni
 			if err := writeQuestion(entry, qIdx+1, q, ops); err != nil {
-				return fmt.Errorf("scheda_%d, domanda_%d: %w", i, qIdx+1, err)
+				return fmt.Errorf("scheda_%d, quesito_%d: %w", i, qIdx+1, err)
 			}
 
-			// Trova l'opzione corretta post-shuffle
 			correct := findCorrectLabel(ops)
 			if correct == "" {
-				return fmt.Errorf("scheda_%d, domanda_%d: nessuna opzione marcata come corretta", i, qIdx+1)
+				return fmt.Errorf("scheda_%d, quesito_%d: nessuna opzione marcata come corretta", i, qIdx+1)
 			}
 
-			// Riga nel CSV delle soluzioni
-			// Costruisce il foglio delle soluzioni che accompagna le schede d’esame,
-			// indicando per ogni domanda quale opzione è quella giusta (il formato è CSV).
+			// Scrivi la riga nel buffer del CSV, NON nel file ZIP
 			if err := cw.Write([]string{strconv.Itoa(i), strconv.Itoa(qIdx + 1), correct}); err != nil {
-				return fmt.Errorf("scrittura soluzioni (scheda_%d, domanda_%d): %w", i, qIdx+1, err)
+				return fmt.Errorf("scrittura soluzioni (scheda_%d, quesito_%d): %w", i, qIdx+1, err)
 			}
+
 		}
 	}
 
-	// Gli errori di Flush/Close saranno gestiti nei defer
+	// Forza il flush finale del buffer del CSV
+	cw.Flush()
+	if ferr := cw.Error(); ferr != nil {
+		return fmt.Errorf("flush soluzioni.csv: %w", ferr)
+	}
+
+	// A questo punto, il contenuto del CSV è completo e si trova in `csvBuffer`.
+	// Crea il file "soluzioni.csv" all'interno dello ZIP e ci copia il contenuto del buffer
+	solutionsFile, err := zw.Create("soluzioni.csv")
+	if err != nil {
+		return fmt.Errorf("creazione soluzioni.csv: %w", err)
+	}
+	if _, err := solutionsFile.Write(csvBuffer.Bytes()); err != nil {
+		return fmt.Errorf("scrittura finale soluzioni.csv: %w", err)
+	}
+
 	return nil
 }
 

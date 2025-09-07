@@ -118,10 +118,10 @@ func UpdateQuesito(quesito models.Quesito) error {
 	return nil
 }
 
-func DeleteQuesito(id string) error {
+func DeleteQuesito(ids []uint) error {
 	// [AGGIORNATO] rimosso controllo su id vuoto (validato nel controller)
-	if err := database.DB.Delete(&models.Quesito{}, id).Error; err != nil {
-		return fmt.Errorf("cancellazione quesito: %w", err)
+	if err := database.DB.Delete(&models.Quesito{}, ids).Error; err != nil {
+		return fmt.Errorf("cancellazione quesiti: %w", err)
 	}
 	return nil
 }

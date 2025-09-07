@@ -132,10 +132,8 @@ namespace QuizClient
         {
             // Verifica che il doppio click sia su una riga e non sull'header
             var listViewItem = ItemsControl.ContainerFromElement(CategoryListView, e.OriginalSource as DependencyObject) as ListViewItem;
-            if (listViewItem == null)
-                return;
 
-            if (listViewItem.DataContext is Categoria selezionata)
+            if (listViewItem != null && listViewItem.DataContext is Categoria selezionata)
             {
                 var finestra = new CategoryDialogWindow(selezionata, _jwtToken);
                 if (finestra.ShowDialog() == true)

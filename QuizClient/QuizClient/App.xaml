@@ -30,6 +30,7 @@
 
         <!-- 🔘 Stile globale per tutti i Button -->
         <Style TargetType="Button">
+            <Setter Property="Height" Value="40" />
             <Setter Property="Background" Value="{StaticResource PrimaryBrush}" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="FontSize" Value="14" />

@@ -80,7 +80,7 @@ namespace QuizClient
                 DifficoltaLabel.Visibility = Visibility.Collapsed;
                 DifficoltaBox.Visibility = Visibility.Collapsed;
                 CorrettaStackPanel.Visibility = Visibility.Collapsed;
-                CategoriaStackPanel.Visibility = Visibility.Collapsed;
+                CategoryLabel.Visibility = Visibility.Collapsed;
                 CategoryDockPanel.Visibility = Visibility.Collapsed;
             }
         }

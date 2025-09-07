@@ -39,7 +39,7 @@ namespace QuizClient
             // che a sua volta eredita da FrameworkElement.
             Utils.JwtUtils.ValidateDocenteRole(_jwtToken, this.NavigationService, this);
 
-            QuesitiGrid.ItemsSource = Quesiti;
+            QuesitiListView.ItemsSource = Quesiti;
             CaricaQuesiti();
         }
         //Metodo per caricare i quesiti dal database rispetto al docente loggato.
@@ -85,14 +85,12 @@ namespace QuizClient
 
        
         // Metodo per gestire il doppio click su una riga della griglia dei quesiti.
-        private async void QuesitiGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private async void QuesitiListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             // Verifica che il doppio click sia su una riga e non sull'header
-            var row = ItemsControl.ContainerFromElement(QuesitiGrid, e.OriginalSource as DependencyObject) as DataGridRow;
-            if (row == null)
-                return;
+            var listViewItem = ItemsControl.ContainerFromElement(QuesitiListView, e.OriginalSource as DependencyObject) as ListViewItem;
 
-            if (row.Item is Quesito selezionato)
+            if ( listViewItem != null && listViewItem.DataContext is Quesito selezionato)
             {
                 var finestra = new QuestionDialogWindow (selezionato, _jwtToken, Mode.FromQuestionsPage);
                 if (finestra.ShowDialog() == true)
@@ -160,15 +158,15 @@ namespace QuizClient
 
 
                 // Chiamata unica al servizio per eliminazione multipla
-                var result = await _crudService.DeleteCategoriaAsync(ids);
+                var result = await _crudService.DeleteQuesitoAsync(ids);
 
                 if (result.Success)
                 {
                     MessageBox.Show("Quesiti eliminati con successo!", "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
                     // Rimuovi localmente le categorie selezionate
-                    foreach (var cat in selezionati)
+                    foreach (var q in selezionati)
                     {
-                        TuttiQuesiti.Remove(cat);
+                        TuttiQuesiti.Remove(q);
                         FiltraQuesiti((SearchBox?.Text) ?? string.Empty);
                     }
                 }
@@ -293,22 +291,22 @@ namespace QuizClient
             //    this.IsEnabled = false;
         }
         //Metodo per selezionare tutti i quesiti mostrati nella griglia.
-        private void SelezionaTutteLeCheckbox_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is CheckBox headerCheckBox)
-            {
-                bool seleziona = headerCheckBox.IsChecked == true;
+        //private void SelezionaTutteLeCheckbox_Click(object sender, RoutedEventArgs e)
+        //{
+        //    if (sender is CheckBox headerCheckBox)
+        //    {
+        //        bool seleziona = headerCheckBox.IsChecked == true;
 
-                // Imposta la proprietà Selezionato di tutti i quesiti mostrati nella griglia
-                foreach (var que in Quesiti)
-                {
-                    que.Selezionato = seleziona;
-                }
+        //        // Imposta la proprietà Selezionato di tutti i quesiti mostrati nella griglia
+        //        foreach (var que in Quesiti)
+        //        {
+        //            que.Selezionato = seleziona;
+        //        }
 
-                // Aggiorna la DataGrid (notifica il binding)
-                QuesitiGrid.Items.Refresh();
-            }
-        }
+        //        // Aggiorna la DataGrid (notifica il binding)
+        //        QuesitiListView.Items.Refresh();
+        //    }
+        //}
 
 
     }
