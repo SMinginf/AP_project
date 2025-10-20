@@ -15,11 +15,13 @@ namespace QuizClient.Utils
     public class ServiceResult<T> 
     {
         public T? Data { get; set; }
-        public bool Success => ErrorMessage == null;
+        public string? ErrorMessage { get; set; }
+        public bool Success => string.IsNullOrEmpty(ErrorMessage);
         //Questa è una "expression-bodied property" (proprietà con corpo espressione).
         //È una forma concisa per definire una proprietà il cui valore è il risultato di una singola espressione.
         //Significa che la proprietà Success sarà true se e solo se la proprietà ErrorMessage è null.
         //Altrimenti, sarà false. Non ha un setter, il suo valore è calcolato dinamicamente.
-        public string? ErrorMessage { get; set; }
+
+        public static ServiceResult<T> FromError(string message) => new() { ErrorMessage = message };
     }
 }

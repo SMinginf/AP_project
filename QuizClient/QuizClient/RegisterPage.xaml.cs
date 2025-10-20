@@ -1,6 +1,8 @@
 ﻿using QuizClient.Services;
 using QuizClient.Utils;
 using System;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -8,61 +10,95 @@ namespace QuizClient
 {
     public partial class RegisterPage : Page
     {
-        private readonly AuthService _authService = new AuthService();
+        private readonly AuthService _authService;
 
         public RegisterPage()
         {
             InitializeComponent();
+            _authService = new AuthService();
         }
 
         private async void RegisterUser_ClickAsync(object sender, RoutedEventArgs e)
         {
-            string ruolo = ((ComboBoxItem)RoleComboBox.SelectedItem)?.Content.ToString() ?? string.Empty;
-
-            string username = NicknameBox.Text;
-            string email = EmailBox.Text;
-            string nome = NameBox.Text;
-            string cognome = SurnameBox.Text;
-            string genere = ((ComboBoxItem)GenderComboBox.SelectedItem)?.Content.ToString() ?? string.Empty;
+            string role = (RoleComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? string.Empty;
+            string username = NicknameBox.Text.Trim();
+            string email = EmailBox.Text.Trim();
+            string name = NameBox.Text.Trim();
+            string surname = SurnameBox.Text.Trim();
+            string gender = (GenderComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? string.Empty;
             string password = PasswordBox.Password;
             string confirmPassword = ConfirmPasswordBox.Password;
-            string data_nascita = BirthDatePicker.SelectedDate?.ToString("yyyy-MM-dd") ?? string.Empty;
-            /*
-               La proprietà Content di un oggetto ComboBoxItem potrebbe essere null. Quando si tenta di chiamare il metodo ToString() 
-               su un valore null, si genera un errore. Ho aggiunto l'operatore di coalescenza nulla (??) per fornire un valore predefinito 
-               (string.Empty) nel caso in cui Content o il risultato di ToString() siano null. 
-               Questo garantisce che la variabile genere non contenga mai un valore null.
+            string birthDate = BirthDatePicker.SelectedDate?.ToString("yyyy-MM-dd") ?? string.Empty;
 
-               la proprietà SelectedItem di una ComboBox restituisce un oggetto di tipo object.
-               In questo caso gli elementi della ComboBox sono di tipo ComboBoxItem, quindi faccio il casting per accedere alla proprietà Content.
-
-               ? = operatore di accesso condizionale -> se il risultato del cast non è null, allora accedo alla proprietà Content, altrimenti restituisci null.
-
-            */
-            if (password != confirmPassword)
-            {
-                MessageBox.Show("Le password non coincidono.");
+            if (!ValidateInputs(username, email, password, confirmPassword))
                 return;
-            }
 
-           
-            var result = await _authService.RegisterAsync(ruolo, username, email, nome, cognome, genere, password, data_nascita);
-            if (result.Success && result.Data != null)
+            // Evito doppi click
+            RegisterButton.IsEnabled = false;
+            BackButton.IsEnabled = false;
+
+            try
             {
-                  MessageBox.Show(result.Data, "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
-                  NavigationService.Navigate(new LoginPage());
+                var result = await _authService.RegisterAsync(role, username, email, name, surname, gender, password, birthDate);
+
+                if (result.Success && !string.IsNullOrEmpty(result.Data))
+                {
+                    ShowInfo(result.Data);
+                    NavigationService?.Navigate(new LoginPage());
+                }
+                else
+                {
+                    ShowError(result.ErrorMessage ?? "Errore durante la registrazione dell'utente.");
+                }
             }
-            else
+            catch (HttpRequestException)
             {
-                  MessageBox.Show(result.ErrorMessage ?? "Errore durante la registrazione dell'utente", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError("Impossibile connettersi al server. Controlla la connessione e riprova.");
+            }
+            catch (Exception ex)
+            {
+                ShowError($"Errore imprevisto: {ex.Message}");
+            }
+            finally
+            {
+                RegisterButton.IsEnabled = true;
+                BackButton.IsEnabled = true;
             }
         }
-            
- 
+
+        private bool ValidateInputs(string username, string email, string password, string confirmPassword)
+        {
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(confirmPassword))
+            {
+                ShowError("Tutti i campi sono obbligatori.");
+                return false;
+            }
+
+            if (password != confirmPassword)
+            {
+                ShowError("Le password non coincidono.");
+                return false;
+            }
+
+            if (!email.Contains("@"))
+            {
+                ShowError("Inserisci un indirizzo email valido.");
+                return false;
+            }
+
+            return true;
+        }
 
         private void BackToLogin_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService.GoBack();
+            NavigationService?.GoBack();
         }
+
+        private static void ShowInfo(string message) =>
+            MessageBox.Show(message, "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+
+        private static void ShowError(string message) =>
+            MessageBox.Show(message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 }

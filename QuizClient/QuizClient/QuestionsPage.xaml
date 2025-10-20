@@ -8,6 +8,7 @@
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="QuestionsPage"
+      Unloaded="Page_Unloaded"
       Background="{StaticResource AppBackgroundBrush}">
 
     <Page.Resources>

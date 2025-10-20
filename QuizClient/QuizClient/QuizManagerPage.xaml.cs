@@ -141,7 +141,8 @@ namespace QuizClient
                 {
                     int i = TuttiQuesiti.IndexOf(selezionato);
                     TuttiQuesiti[i] = finestra.QuesitoCreato;
-                    CaricaQuesitiQuiz();
+                    //CaricaQuesitiQuiz();
+                    FiltraQuesiti(string.Empty);
                 }
                 else
                 {

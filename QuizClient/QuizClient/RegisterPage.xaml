@@ -56,8 +56,8 @@
                     <PasswordBox x:Name="ConfirmPasswordBox" Margin="0,0,0,20" />
 
                     <!-- Pulsanti -->
-                    <Button Content="Registrati" Click="RegisterUser_ClickAsync" Height="40" />
-                    <Button Content="Indietro" Click="BackToLogin_Click" Height="40" />
+                    <Button x:Name="RegisterButton" Content="Registrati" Click="RegisterUser_ClickAsync" Height="40" />
+                    <Button x:Name="BackButton" Content="Indietro" Click="BackToLogin_Click" Height="40" />
                 </StackPanel>
             </Border>
         </Grid>

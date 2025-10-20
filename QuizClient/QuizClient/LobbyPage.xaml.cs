@@ -1,86 +1,88 @@
-﻿using QuizClient;
-using QuizClient.Models;
+﻿using QuizClient.Models;
 using QuizClient.Services;
 using QuizClient.Utils;
 using System;
-using System.Data;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Navigation;
 
 namespace QuizClient
 {
     public partial class LobbyPage : Page
     {
-        private string _jwtToken;
-        private string _ruolo="";
+        private readonly string _jwtToken;
+        private readonly string _role="";
+        private readonly string _username="";
 
         public LobbyPage(string jwtToken)
         {
             InitializeComponent();
             _jwtToken = jwtToken;
-            string username;
 
             try
             {
-                _ruolo = JwtUtils.GetClaimAsString(_jwtToken, "ruolo");
-                username = JwtUtils.GetClaimAsString(jwtToken, "username");
+                _role = JwtUtils.GetClaimAsString(_jwtToken, "ruolo");
+                _username = JwtUtils.GetClaimAsString(_jwtToken, "username");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Errore nel recupero dati dal token JWT: {ex.Message}", "Errore JWT", MessageBoxButton.OK, MessageBoxImage.Error);
-                if (NavigationService != null && NavigationService.CanGoBack)
-                    NavigationService.GoBack();
-                else
-                    this.IsEnabled = false;
+                ShowError($"Errore nel recupero dati dal token JWT: {ex.Message}");
+                DisableAndGoBack();
                 return;
             }
 
-            TitoloTextBox.Text = $"Benvenuto, {username}";
-            GestisciCategorieButton.Visibility = _ruolo == "Docente" ? Visibility.Visible : Visibility.Collapsed;
-
-            // Aggiunto SQ
-            // Mostra / nascondi i pulsanti in base al ruolo
-            QuizButton.Content = _ruolo == "Docente" ? "Crea nuovo Quiz" : "Svolgi un Quiz";
-            GestisciCategorieButton.Visibility = _ruolo == "Docente" ? Visibility.Visible : Visibility.Collapsed;
-            GestisciQuesitiButton.Visibility = _ruolo == "Docente" ? Visibility.Visible : Visibility.Collapsed;
-            ////
+            InitializeUI();
         }
 
-        // Aggiunto SQ
+        private void InitializeUI()
+        {
+            TitoloTextBox.Text = $"Benvenuto, {_username}";
+
+            bool isTeacher = _role.Equals("Docente", StringComparison.OrdinalIgnoreCase);
+
+            QuizButton.Content = isTeacher ? "Crea nuovo Quiz" : "Svolgi un Quiz";
+
+            GestisciCategorieButton.Visibility = isTeacher ? Visibility.Visible : Visibility.Collapsed;
+            GestisciQuesitiButton.Visibility = isTeacher ? Visibility.Visible : Visibility.Collapsed;
+        }
+
         private void CreateQuiz_Click(object sender, RoutedEventArgs e)
         {
-            if (_ruolo == "Studente")
-            {
+            if (_role.Equals("Studente", StringComparison.OrdinalIgnoreCase))
                 NavigationService.Navigate(new CreateQuizPage(_jwtToken, Mode.Default));
-            }
-            else if (_ruolo == "Docente")
-            {
+            else
                 NavigationService.Navigate(new ChooseQuizModePage(_jwtToken));
-            }
-        }
-        private void ManageCategories_Click(object sender, RoutedEventArgs e)
-        {
-            NavigationService.Navigate(new CategoriesPage(_jwtToken));
         }
 
-        // Aggiunto SQ
-        private void ManageQuestions_Click(object sender, RoutedEventArgs e)
-        {
+        private void ManageCategories_Click(object sender, RoutedEventArgs e) =>
+            NavigationService.Navigate(new CategoriesPage(_jwtToken));
+
+        private void ManageQuestions_Click(object sender, RoutedEventArgs e) =>
             NavigationService.Navigate(new QuestionsPage(_jwtToken));
-        }
 
         private void ProfileStats_Click(object sender, RoutedEventArgs e)
         {
-            if (_ruolo == "Docente")
+            if (_role.Equals("Docente", StringComparison.OrdinalIgnoreCase))
                 NavigationService.Navigate(new TeacherStats(_jwtToken));
-            else if (_ruolo == "Studente")
+            else
                 NavigationService.Navigate(new StudentStats(_jwtToken));
         }
 
-        private void Logout_Click(object sender, RoutedEventArgs e)
-        {
+        private void Logout_Click(object sender, RoutedEventArgs e) {
+            SessionManager.Clear();
             NavigationService.Navigate(new LoginPage());
         }
+            
+
+        // --- Helper methods ---
+        private void DisableAndGoBack()
+        {
+            if (NavigationService.CanGoBack == true)
+                NavigationService.GoBack();
+            else
+                IsEnabled = false;
+        }
+
+        private static void ShowError(string message) =>
+            MessageBox.Show(message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 }

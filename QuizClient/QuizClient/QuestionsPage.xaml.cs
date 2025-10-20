@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿/*
+using Microsoft.Win32;
 using QuizClient.Models;
 using QuizClient.Services;
 using QuizClient.Utils;
@@ -308,6 +309,299 @@ namespace QuizClient
         //    }
         //}
 
+
+    }
+}
+*/
+
+using Microsoft.Win32;
+using QuizClient.Models;
+using QuizClient.Services;
+using QuizClient.Utils;
+using System.Collections.ObjectModel;
+using System.Windows;
+using System.Windows.Controls;
+
+namespace QuizClient
+{
+    public partial class QuestionsPage : Page, IDisposable
+    {
+        // Gestisce la view dei Quesiti. Viene usata come sorgente dati per la griglia (QuesitiGrid) nella UI.
+        // Ogni volta che questa collezione viene modificata (aggiunta, rimozione, aggiornamento),
+        // la UI si aggiorna automaticamente grazie al binding WPF. Si usa per permettere la ricerca e
+        // il filtraggio dei quesiti.
+        public ObservableCollection<Quesito> Quesiti { get; } = new();
+
+        // Contiene tutti i quesiti disponibili, senza filtri. Rispecchia il contenuto del database.
+        private List<Quesito> _tuttiQuesiti = new();
+
+        private readonly string _jwtToken;
+        private readonly CRUDService _crudService;
+        private int _count; // Contatore per il numero di quesiti caricati dal file
+        private bool _disposed;
+
+        // Costruttore della pagina QuestionsPage
+        public QuestionsPage(string jwtToken)
+        {
+            InitializeComponent();
+            _jwtToken = jwtToken;
+            _crudService = new CRUDService(_jwtToken);
+
+            // Controllo ruolo utente dal JWT
+            JwtUtils.ValidateDocenteRole(_jwtToken, NavigationService, this);
+
+            QuesitiListView.ItemsSource = Quesiti;
+            CaricaQuesiti();
+        }
+
+        // Metodo per caricare i quesiti dal database rispetto al docente loggato
+        private async void CaricaQuesiti()
+        {
+            var result = await _crudService.GetQuesitiByDocenteAsync();
+            if (result.Success && result.Data != null)
+            {
+                _tuttiQuesiti = result.Data;
+                FiltraQuesiti(string.Empty);
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage ?? "Errore nel caricamento dei quesiti.",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // Metodo per filtrare i quesiti in base al testo di ricerca e ai filtri selezionati e caricare la view
+        private void FiltraQuesiti(string filtro)
+        {
+            Quesiti.Clear();
+
+            // Filtra tutti i quesiti per Docente loggato 
+            foreach (var q in _tuttiQuesiti.Where(q =>
+                     string.IsNullOrWhiteSpace(filtro) ||
+                     q.Testo.Contains(filtro, StringComparison.OrdinalIgnoreCase)))
+            {
+                Quesiti.Add(q);
+            }
+        }
+
+        // Metodo per gestire il cambiamento del testo nella casella di ricerca
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var filtro = (sender as TextBox)?.Text ?? string.Empty;
+            FiltraQuesiti(filtro);
+        }
+
+        // Metodo per gestire il doppio click su una riga della griglia dei quesiti
+        private async void QuesitiListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            // Verifica che il doppio click sia su una riga e non sull'header
+            if (ItemsControl.ContainerFromElement(QuesitiListView, e.OriginalSource as DependencyObject) is not ListViewItem listViewItem)
+                return;
+
+            if (listViewItem.DataContext is not Quesito selezionato)
+                return;
+
+            var finestra = new QuestionDialogWindow(selezionato, _jwtToken, Mode.FromQuestionsPage);
+            if (finestra.ShowDialog() != true) return;
+
+            var result = await _crudService.UpdateQuesitoAsync(finestra.QuesitoCreato);
+            if (result.Success && result.Data != null)
+            {
+                MessageBox.Show("Quesito aggiornato con successo!", "Successo",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+
+                int index = _tuttiQuesiti.IndexOf(selezionato);
+                if (index >= 0)
+                    _tuttiQuesiti[index] = finestra.QuesitoCreato;
+
+                FiltraQuesiti(SearchBox?.Text ?? string.Empty);
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage ?? "Errore nell'aggiornamento del quesito.",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // Metodo per aprire la finestra di dialogo per creare un nuovo quesito.
+        // Viene chiamato quando l'utente clicca sul pulsante "Nuovo Quesito".
+        private async void NuovoQuesito_Click(object sender, RoutedEventArgs e)
+        {
+            var finestra = new QuestionDialogWindow(_jwtToken, Mode.FromQuestionsPage);
+            if (finestra.ShowDialog() != true) return;
+
+            var result = await _crudService.CreateQuesitoAsync(finestra.QuesitoCreato);
+            if (result.Success && result.Data != null)
+            {
+                MessageBox.Show("Quesito creato con successo!", "Successo",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+
+                _tuttiQuesiti.Add(finestra.QuesitoCreato);
+                FiltraQuesiti(SearchBox?.Text ?? string.Empty);
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage ?? "Errore nella creazione del quesito.",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // Metodo per eliminare i quesiti selezionati
+        private async void EliminaQuesito_Click(object sender, RoutedEventArgs e)
+        {
+            var selezionati = _tuttiQuesiti.Where(c => c.Selezionato).ToList();
+            if (!selezionati.Any())
+            {
+                MessageBox.Show("Seleziona almeno un quesito da eliminare.", "Attenzione",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var conferma = MessageBox.Show(
+                $"Vuoi eliminare {selezionati.Count} quesiti selezionati?",
+                "Conferma eliminazione",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (conferma != MessageBoxResult.Yes) return;
+
+            var ids = selezionati.Select(c => c.ID).ToList();
+            System.Diagnostics.Debug.WriteLine("Contenuto di ids: " + string.Join(", ", ids));
+
+            var result = await _crudService.DeleteQuesitoAsync(ids);
+            if (result.Success)
+            {
+                MessageBox.Show("Quesiti eliminati con successo!", "Successo",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+
+                foreach (var q in selezionati)
+                    _tuttiQuesiti.Remove(q);
+
+                FiltraQuesiti(SearchBox?.Text ?? string.Empty);
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage ?? "Errore nell'eliminazione dei quesiti.",
+                    "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                CaricaQuesiti();
+            }
+        }
+
+        // Metodo per caricare un quesito da un file 
+        private async void CaricaDaFile_Click(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "File di Testo (*.txt)|*.txt|File JSON (*.json)|*.json|Tutti i file (*.*)|*.*",
+                Title = "Seleziona il file da cui caricare i quesiti",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
+            };
+
+            if (openFileDialog.ShowDialog() != true)
+            {
+                MessageBox.Show("Nessun file selezionato.", "Informazione",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            string filePath = openFileDialog.FileName;
+            try
+            {
+                string fileContent = System.IO.File.ReadAllText(filePath);
+                MessageBox.Show($"File selezionato: {filePath}\nContenuto (primi 100 caratteri):\n{fileContent[..Math.Min(fileContent.Length, 100)]}");
+
+                var quesitiFile = JSONLoader.JSONtoQuesiti(fileContent) ?? new List<Quesito>();
+                if (!quesitiFile.Any())
+                {
+                    MessageBox.Show("Nessun quesito trovato nel file selezionato.", "Informazione",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                _tuttiQuesiti.Clear();
+                _count = 0;
+                string categorieInserite = string.Empty;
+
+                // Recupero ID docente dal JWT
+                uint idDocente;
+                try
+                {
+                    idDocente = JwtUtils.GetClaimAsUInt(_jwtToken, "user_id");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Errore nel recupero dell'ID docente dal token JWT: {ex.Message}",
+                        "Errore JWT", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                foreach (var q in quesitiFile)
+                {
+                    _count++;
+                    q.Selezionato = false;
+                    q.IDDocente = idDocente;
+
+                    foreach (var cat in q.Categorie)
+                    {
+                        cat.IDDocente = idDocente;
+                        var resultC = await _crudService.GetCategorieByDocenteAndNomeAsync(cat.Nome);
+                        if (resultC.Success && resultC.Data == null)
+                            categorieInserite = string.Join(", ", cat.Nome);
+                        else if (!resultC.Success)
+                            MessageBox.Show(resultC.ErrorMessage ?? $"Errore nel caricamento del quesito numero {_count} da file",
+                                "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+
+                    var resultQ = await _crudService.CreateQuesitoAsync(q);
+                    if (resultQ.Success && resultQ.Data != null)
+                        _tuttiQuesiti.Add(q);
+                    else
+                        MessageBox.Show(resultQ.ErrorMessage ?? $"Errore nel caricamento del quesito numero {_count} da file",
+                            "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
+                MessageBox.Show($"Inseriti correttamente {quesitiFile.Count} su {_count} quesiti presenti nel file",
+                    "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Le seguenti categorie non erano presenti e sono state aggiunte: {categorieInserite}",
+                    "Successo", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                CaricaQuesiti();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Errore durante la lettura del file: {ex.Message}", "Errore",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // Metodo per tornare alla pagina precedente
+        private void Back_Click(object sender, RoutedEventArgs e)
+        {
+            if (NavigationService?.CanGoBack == true)
+                NavigationService.GoBack();
+        }
+
+        public void Dispose()
+        {
+            // Best practice: controllo con flag per garantire idempotenza
+            if (_disposed)
+                return;
+            _crudService.Dispose();
+            _disposed = true;
+
+            // Sopprime la finalizzazione se non è necessaria (buona pratica):
+            // permette di saltare l'esecuzione del finalizzatore, poichè le risorse critiche sono già
+            // state rilasciate, e pulire la sua memoria nel modo più veloce possibile.
+            GC.SuppressFinalize(this);
+        }
+
+        // Metodo per gestire l'evento di scaricamento della Page
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // Chiama il metodo Dispose() quando la pagina non è più visualizzata
+            // Questa è la chiave per il rilascio di _crudService.HttpClient.
+            (this as IDisposable)?.Dispose();
+        }
 
     }
 }

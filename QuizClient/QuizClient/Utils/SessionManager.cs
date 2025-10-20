@@ -9,6 +9,10 @@ namespace QuizClient.Utils
         // senza bisogno di un'istanza (es. SessionManager.AccessToken).
         // Essendo static, esiste una sola copia di questa proprietà per tutta la durata dell'applicazione,
         // condivisa da tutti.
-        public static string? AccessToken { get; set; }
+        public static string? AccessToken { get; private set; }
+
+        public static void SetToken(string tk) => AccessToken = tk;
+
+        public static void Clear() => AccessToken = null;
     }
 }

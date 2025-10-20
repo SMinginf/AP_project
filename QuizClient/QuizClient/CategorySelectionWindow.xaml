@@ -4,6 +4,7 @@
         Title="Seleziona Categorie"
         Height="500"
         Width="700"
+        Unloaded="Window_Unloaded"
         Background="{StaticResource AppBackgroundBrush}">
     <Window.Resources>
         <utils:PubblicaToStringConverter x:Key="PubblicaToStringConverter"/>

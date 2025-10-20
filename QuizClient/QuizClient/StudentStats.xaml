@@ -4,6 +4,7 @@
       xmlns:oxy="clr-namespace:OxyPlot.Wpf;assembly=OxyPlot.Wpf"
       Title="StudentStats"
        xmlns:utils="clr-namespace:QuizClient.Utils"
+      Unloaded="Page_Unloaded"
       Background="{StaticResource AppBackgroundBrush}">
 
     <Grid>

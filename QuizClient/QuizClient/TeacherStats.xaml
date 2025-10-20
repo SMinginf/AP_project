@@ -6,6 +6,7 @@
       xmlns:oxy="http://oxyplot.org/wpf"
       xmlns:local="clr-namespace:QuizClient"
       xmlns:utils="clr-namespace:QuizClient.Utils"
+      Unloaded="Page_Unloaded"
 
       mc:Ignorable="d"
       Title="TeacherStats">

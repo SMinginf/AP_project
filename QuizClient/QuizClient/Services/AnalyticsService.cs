@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -172,6 +172,125 @@ namespace QuizClient.Services
             {
                 return new ServiceResult<StudentStatsResponse> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
             }
+        }
+    }
+}
+*/
+
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Threading.Tasks;
+using QuizClient.Models;
+using QuizClient.Utils;
+
+namespace QuizClient.Services
+{
+    /// <summary>
+    /// Servizio per ottenere statistiche dal microservizio Analytics.
+    /// Tutte le richieste HTTP includono il token JWT dell'utente autenticato.
+    /// </summary>
+    public class AnalyticsService: IDisposable
+    {
+        private readonly HttpClient _client;
+        private readonly string _jwtToken;
+        private bool _disposed;
+
+        public AnalyticsService(string jwtToken)
+        {
+            _jwtToken = jwtToken;
+
+            _client = new HttpClient
+            {
+                BaseAddress = new Uri("http://localhost:8005") // Modifica se usi un'altra porta
+            };
+
+            // Imposta l'header di autorizzazione per tutte le richieste HTTP inviate da questo client
+            _client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+        }
+
+        // --- METODI PER IL DOCENTE ---
+
+        public async Task<ServiceResult<TeacherGeneralStats>> GetTeacherGeneralStatsAsync()
+            => await GetAsync<TeacherGeneralStats>($"/stats/teacher/{JwtUtils.GetClaimAsUInt(_jwtToken, "user_id")}/general");
+
+        public async Task<ServiceResult<TeacherCategoryStatsResponse>> GetTeacherStatsPerCategoryAsync(List<uint> categoriaIds)
+        {
+            var idDocente = JwtUtils.GetClaimAsUInt(_jwtToken, "user_id");
+            var idsQuery = string.Join(",", categoriaIds);
+            return await GetAsync<TeacherCategoryStatsResponse>($"/stats/teacher/{idDocente}?categoria_ids={idsQuery}");
+        }
+
+        // --- METODI PER LO STUDENTE ---
+
+        public async Task<ServiceResult<StudentGeneralStats>> GetStudentGeneralStatsAsync()
+            => await GetAsync<StudentGeneralStats>($"/stats/student/{JwtUtils.GetClaimAsUInt(_jwtToken, "user_id")}/general");
+
+        public async Task<ServiceResult<StudentStatsResponse>> GetStudentStatsPerCategoryAsync(List<uint> categoriaIds)
+        {
+            var idStudente = JwtUtils.GetClaimAsUInt(_jwtToken, "user_id");
+            var idsQuery = string.Join(",", categoriaIds);
+            return await GetAsync<StudentStatsResponse>($"/stats/student/{idStudente}?categoria_ids={idsQuery}");
+        }
+
+        // --- METODO AUSILIARIO GENERICO PER LE RICHIESTE GET ---
+        private async Task<ServiceResult<T>> GetAsync<T>(string url)
+        {
+            try
+            {
+                var response = await _client.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<T>();
+                    return new ServiceResult<T> { Data = data };
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var errorMsg = $"Errore HTTP {response.StatusCode}";
+
+                try
+                {
+                    using var doc = JsonDocument.Parse(errorContent);
+                    if (doc.RootElement.TryGetProperty("detail", out var errorProp))
+                        errorMsg = errorProp.GetString() ?? errorMsg;
+                }
+                catch
+                {
+                    // parsing fallito, si mantiene il messaggio generico
+                }
+
+                return new ServiceResult<T> { ErrorMessage = errorMsg };
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ServiceResult<T> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (JsonException ex)
+            {
+                return new ServiceResult<T> { ErrorMessage = $"Errore di deserializzazione: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<T> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
+            }
+        }
+
+        public void Dispose()
+        {
+            // Best practice: controllo con flag per garantire idempotenza
+            if (_disposed)
+                return;
+            _client.Dispose();
+            _disposed = true;
+
+            // Sopprime la finalizzazione se non è necessaria (buona pratica):
+            // permette di saltare l'esecuzione del finalizzatore, poichè le risorse critiche sono già
+            // state rilasciate, e pulire la sua memoria nel modo più veloce possibile.
+            GC.SuppressFinalize(this);
         }
     }
 }

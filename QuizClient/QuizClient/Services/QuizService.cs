@@ -1,3 +1,4 @@
+/*
 using QuizClient.Models;
 using QuizClient.Utils;
 using System;
@@ -208,7 +209,8 @@ namespace QuizClient.Services
                             if (doc.RootElement.TryGetProperty("error", out var errorProp))
                                 errorMsg = errorProp.GetString() ?? errorMsg;
                         }
-                        catch { /* body non-JSON: ignora, mantieni messaggio generico */ }
+                        catch { // body non-JSON: ignora, mantieni messaggio generico  
+                                }
 
                         // Restituisce errore incapsulato in ServiceResult
                         return new ServiceResult<string> { ErrorMessage = errorMsg };
@@ -241,4 +243,215 @@ namespace QuizClient.Services
 
     }
 
+}
+*/
+
+using QuizClient.Models;
+using QuizClient.Utils;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace QuizClient.Services
+{
+    public sealed class QuizService : IDisposable
+    {
+        private readonly HttpClient _client;
+        private readonly string _jwtToken;
+        private bool _disposed;
+
+        public QuizService(string jwtToken)
+        {
+            _jwtToken = jwtToken;
+
+            _client = new HttpClient
+            {
+                BaseAddress = new Uri("http://localhost:8081") // modifica se usi altra porta
+            };
+
+            // Imposta l’header di autorizzazione per tutte le richieste HTTP
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+        }
+
+        /// <summary>
+        /// Crea un nuovo quiz sul server.
+        /// </summary>
+        public async Task<ServiceResult<Quiz>> CreateQuizAsync(
+            bool aiGenerated,
+            string aiCategory,
+            List<uint> categoryIds,
+            bool merge,
+            string difficulty,
+            int questionCount,
+            List<uint> questionIds)
+        {
+            var payload = new
+            {
+                ai_generated = aiGenerated,
+                ai_categoria = aiCategory,
+                id_categorie = categoryIds,
+                unione = merge,
+                difficolta = difficulty,
+                quantita = questionCount,
+                id_quesiti = questionIds
+            };
+
+            try
+            {
+                var response = await _client.PostAsJsonAsync("/quiz/create", payload);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<Quiz>();
+                    return new ServiceResult<Quiz> { Data = data };
+                }
+
+                var error = await response.Content.ReadAsStringAsync();
+                var errorMsg = ExtractErrorMessage(response.StatusCode.ToString(), error);
+
+                return new ServiceResult<Quiz> { ErrorMessage = errorMsg };
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ServiceResult<Quiz> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<Quiz> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
+            }
+        }
+
+        /// <summary>
+        /// Salva un quiz completato dall’utente sul server.
+        /// </summary>
+        public async Task<ServiceResult<Quiz>> StoreQuizAsync(
+            Quiz quiz,
+            int correct,
+            int incorrect,
+            string creationDate,
+            string duration,
+            List<int?> userAnswers)
+        {
+            try
+            {
+                var userId = JwtUtils.GetClaimAsUInt(_jwtToken, "user_id");
+                var questionIds = quiz.Quesiti.Select(q => q.ID).ToList();
+
+                var payload = new
+                {
+                    difficolta = quiz.Difficolta,
+                    quantita = quiz.Quantita,
+                    id_quesiti = questionIds,
+                    id_utente = userId,
+                    corrette = correct,
+                    sbagliate = incorrect,
+                    data_creazione = creationDate,
+                    durata = duration,
+                    risposte_utente = userAnswers
+                };
+
+                var response = await _client.PostAsJsonAsync("/quiz/store", payload);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<Quiz>();
+                    return new ServiceResult<Quiz> { Data = data };
+                }
+
+                var error = await response.Content.ReadAsStringAsync();
+                var errorMsg = ExtractErrorMessage(response.StatusCode.ToString(), error);
+
+                return new ServiceResult<Quiz> { ErrorMessage = errorMsg };
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ServiceResult<Quiz> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<Quiz> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
+            }
+        }
+
+        /// <summary>
+        /// Genera e scarica in streaming un file ZIP con le schede d’esame.
+        /// </summary>
+        public async Task<ServiceResult<string>> GenerateAndDownloadExamsZipAsync(
+            int examCount,
+            IEnumerable<Quesito> questions)
+        {
+            try
+            {
+                // Costruisci il percorso del file ZIP
+                var projectRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
+                var examsDir = Path.Combine(projectRoot, "exams");
+                Directory.CreateDirectory(examsDir);
+
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var filePath = Path.Combine(examsDir, $"exams_{timestamp}.zip");
+
+                var payload = new { n = examCount, questions };
+
+                using var request = new HttpRequestMessage(HttpMethod.Post, "/quiz/exams")
+                {
+                    Content = JsonContent.Create(payload)
+                };
+
+                using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await using var httpStream = await response.Content.ReadAsStreamAsync();
+                    await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true);
+                    await httpStream.CopyToAsync(fileStream);
+
+                    return new ServiceResult<string> { Data = filePath };
+                }
+
+                var error = await response.Content.ReadAsStringAsync();
+                var errorMsg = ExtractErrorMessage(response.StatusCode.ToString(), error);
+                return new ServiceResult<string> { ErrorMessage = errorMsg };
+            }
+            catch (HttpRequestException ex)
+            {
+                return new ServiceResult<string> { ErrorMessage = $"Errore di rete: {ex.Message}" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult<string> { ErrorMessage = $"Errore imprevisto: {ex.Message}" };
+            }
+        }
+
+        private static string ExtractErrorMessage(string statusCode, string responseBody)
+        {
+            var defaultMessage = $"Errore HTTP {statusCode}";
+
+            try
+            {
+                using var doc = JsonDocument.Parse(responseBody);
+                if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                    return errorProp.GetString() ?? defaultMessage;
+            }
+            catch
+            {
+                // non JSON — ignora, restituisci messaggio generico
+            }
+
+            return defaultMessage;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _client.Dispose();
+            _disposed = true;
+            GC.SuppressFinalize(this);
+        }
+    }
 }
