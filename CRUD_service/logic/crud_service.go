@@ -9,10 +9,6 @@ import (
 )
 
 // --- FUNZIONI CRUD PER LE CATEGORIE ---
-var (
-	ErrBadRequest = errors.New("bad request")
-	ErrNotFound   = errors.New("not found")
-)
 
 func GetCategoriePubbliche() ([]models.Categoria, error) {
 	var categorie []models.Categoria
@@ -24,7 +20,6 @@ func GetCategoriePubbliche() ([]models.Categoria, error) {
 }
 
 func GetCategoriePubblicheByDocente(idDocente string) ([]models.Categoria, error) {
-	// [AGGIORNATO] rimosso controllo su idDocente vuoto (ora verificato nel controller)
 	var categorie []models.Categoria
 	if err := database.DB.Where("id_docente = ? AND pubblica = ?", idDocente, true).Find(&categorie).Error; err != nil {
 		fmt.Println("Errore nel recupero delle categorie pubbliche per il docente:", err.Error())
@@ -50,7 +45,7 @@ func UpdateCategoria(categoria models.Categoria) error {
 		evitare di sovrascrivere valori esistenti con valori zero non intenzionali.
 		Usando il select possiamo esplicitamente specificare quali campi vogliamo aggiornare.
 	*/
-	// [AGGIORNATO] rimosso controllo su categoria.ID == 0 (validato nel controller)
+
 	if err := database.DB.Model(&models.Categoria{}).
 		Where("id = ?", categoria.ID).
 		Select("nome", "tipo", "descrizione", "pubblica", "id_docente").
@@ -61,7 +56,7 @@ func UpdateCategoria(categoria models.Categoria) error {
 }
 
 func DeleteCategorie(ids []uint) error {
-	// [AGGIORNATO] rimosso controllo su len(ids)==0 (validato nel controller)
+
 	if err := database.DB.Delete(&models.Categoria{}, ids).Error; err != nil {
 		return fmt.Errorf("cancellazione categorie: %w", err)
 	}
@@ -69,7 +64,6 @@ func DeleteCategorie(ids []uint) error {
 }
 
 func GetCategorieByDocente(idDocente string) ([]models.Categoria, error) {
-	// [AGGIORNATO] rimosso controllo su idDocente vuoto (validato nel controller)
 	var categorie []models.Categoria
 	if err := database.DB.Where("id_docente = ?", idDocente).Preload("Docente").Find(&categorie).Error; err != nil {
 		fmt.Println("Errore nel recupero delle categorie per il docente:", err.Error())
@@ -79,7 +73,6 @@ func GetCategorieByDocente(idDocente string) ([]models.Categoria, error) {
 }
 
 func GetCategorieByStudente(idStudente string) ([]models.Categoria, error) {
-	// [AGGIORNATO] rimosso controllo su idStudente vuoto (validato nel controller)
 	var categorie []models.Categoria
 
 	err := database.DB.
@@ -111,7 +104,6 @@ func CreateQuesito(quesito models.Quesito) (models.Quesito, error) {
 }
 
 func UpdateQuesito(quesito models.Quesito) error {
-	// [AGGIORNATO] rimosso controllo su quesito.ID == 0 (validato nel controller)
 	if err := database.DB.Model(&models.Quesito{}).Where("id = ?", quesito.ID).Updates(quesito).Error; err != nil {
 		return fmt.Errorf("modifica quesito: %w", err)
 	}
@@ -119,7 +111,6 @@ func UpdateQuesito(quesito models.Quesito) error {
 }
 
 func DeleteQuesito(ids []uint) error {
-	// [AGGIORNATO] rimosso controllo su id vuoto (validato nel controller)
 	if err := database.DB.Delete(&models.Quesito{}, ids).Error; err != nil {
 		return fmt.Errorf("cancellazione quesiti: %w", err)
 	}
@@ -127,7 +118,6 @@ func DeleteQuesito(ids []uint) error {
 }
 
 func GetQuesitiByDocente(idDocente string) ([]models.Quesito, error) {
-	// [AGGIORNATO] rimosso controllo su idDocente vuoto (validato nel controller)
 	var quesiti []models.Quesito
 	if err := database.DB.Where("id_docente = ?", idDocente).Preload("Docente").Preload("Categorie").Find(&quesiti).Error; err != nil {
 		fmt.Println("Errore nel recupero dei quesiti per il docente:", err.Error())
@@ -137,7 +127,6 @@ func GetQuesitiByDocente(idDocente string) ([]models.Quesito, error) {
 }
 
 func GetQuesitiByDocenteAndCategoria(idDocente, categoria string) ([]models.Categoria, error) {
-	// [AGGIORNATO] rimosso controllo su parametri vuoti (validati nel controller)
 	var categorie []models.Categoria
 	if err := database.DB.Where("id_docente = ? AND nome = ?", idDocente, categoria).Preload("Docente").Find(&categorie).Error; err != nil {
 		fmt.Println("Errore nel recupero delle categorie per il docente e la categoria:", err.Error())
@@ -148,7 +137,6 @@ func GetQuesitiByDocenteAndCategoria(idDocente, categoria string) ([]models.Cate
 
 // Funzioni CRUD per gli utenti
 func GetUtente(id string) (models.Utente, error) {
-	// [AGGIORNATO] rimosso controllo su id vuoto (validato nel controller)
 	var utente models.Utente
 	if err := database.DB.First(&utente, id).Error; err != nil {
 		return models.Utente{}, wrap(ErrNotFound, "Utente non trovato")
@@ -156,9 +144,8 @@ func GetUtente(id string) (models.Utente, error) {
 	return utente, nil
 }
 
-func UpdateUtente(utente models.Utente) error {
-	// [AGGIORNATO] rimosso controllo su id vuoto (validato nel controller)
-	if err := database.DB.Model(&models.Utente{}).Where("id = ?", utente.ID).Updates(utente).Error; err != nil {
+func UpdateUtente(id float64, utente models.Utente) error {
+	if err := database.DB.Model(&models.Utente{}).Where("id = ?", id).Updates(utente).Error; err != nil {
 		return fmt.Errorf("modifica utente: %w", err)
 	}
 	return nil
@@ -168,3 +155,8 @@ func UpdateUtente(utente models.Utente) error {
 func wrap(sentinel error, msg string) error {
 	return fmt.Errorf("%w: %s", sentinel, msg)
 }
+
+var (
+	ErrBadRequest = errors.New("bad request")
+	ErrNotFound   = errors.New("not found")
+)

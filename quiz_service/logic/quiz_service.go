@@ -7,7 +7,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/csv"
-	"errors" // [AGGIORNATO] per esporre errori sentinella e permettere al controller di usare errors.Is
+	"errors" // per esporre errori sentinella e permettere al controller di usare errors.Is
 	"fmt"
 	"io"
 	"math/rand"
@@ -23,16 +23,14 @@ var (
 
 // -------------------- BUSINESS LOGIC: CREATE QUIZ --------------------
 
-func CreateQuiz(input models.CreateQuizInput, isStudent bool) (*models.CreateQuizOutput, error) { // [AGGIORNATO] passa il ruolo
+func CreateQuiz(input models.CreateQuizInput, isStudent bool) (*models.CreateQuizOutput, error) {
 	var quiz *models.CreateQuizOutput
 	var err error
 
 	if input.AIGenerated {
 		// Generazione quiz tramite AI (Groq API)
-		// [AGGIORNATO] controllo su input.AICategoria spostato nel controller
 		quiz, err = utils.GenerateAIQuiz(input.AICategoria, input.Difficolta, input.Quantita)
 		if err != nil {
-			// [AGGIORNATO] logging lasciato al chiamante; restituiamo solo l'errore incapsulato
 			return nil, fmt.Errorf("GenerateAIQuiz: %w", err)
 		}
 		return quiz, nil
@@ -71,11 +69,11 @@ func createQuizByUnion(input models.CreateQuizInput) (*models.CreateQuizOutput, 
 	for _, catID := range input.IdCategorie {
 		var catQuesiti []models.Quesito
 
-		q := database.DB.Preload("Categorie"). // [AGGIORNATO] Preload per caricare le categorie associate
+		q := database.DB.Preload("Categorie"). // Preload per caricare le categorie associate
 							Joins("JOIN categoria_quesito cq ON cq.id_quesito = quesiti.id").
 							Where("cq.id_categoria = ?", catID)
 
-		if len(input.IdQuesiti) > 0 { // [AGGIUNTO] Reroll: escludi i già usati
+		if len(input.IdQuesiti) > 0 { // Reroll: escludi i già usati
 			q = q.Where("quesiti.id NOT IN ?", input.IdQuesiti)
 		}
 		// Aggiungi eventuali filtri aggiuntivi
@@ -130,7 +128,7 @@ func createQuizByUnion(input models.CreateQuizInput) (*models.CreateQuizOutput, 
 			if mancano > 0 {
 				// Determiniamo quanti quesiti possiamo effettivamente prendere:
 				// il minimo tra quelli che mancano ancora (avanzo) e quelli disponibili (mancano)
-				toAdd := min(avanzo, mancano) // [AGGIORNATO] helper min implementato in fondo
+				toAdd := min(avanzo, mancano)
 
 				// Aggiungiamo quei quesiti alla distribuzione della categoria corrente
 				distribuzione[catID] += toAdd
@@ -196,7 +194,7 @@ func createQuizByIntersection(input models.CreateQuizInput) (*models.CreateQuizO
 
 	query := database.DB.Where("id IN (?)", subQuery)
 
-	if len(input.IdQuesiti) > 0 { // [AGGIUNTO] Reroll: escludi i già usati
+	if len(input.IdQuesiti) > 0 { // Reroll: escludi i già usati
 		query = query.Where("quesiti.id NOT IN ?", input.IdQuesiti)
 	}
 
@@ -334,7 +332,7 @@ func GenerateExamZIP(questions []models.Quesito, n int, w io.Writer) (retErr err
 		if cerr := zw.Close(); cerr != nil && retErr == nil {
 			retErr = fmt.Errorf("chiusura zip: %w", cerr)
 		}
-		fmt.Println("[DEBUG] ZIP chiuso correttamente")
+		fmt.Println("ZIP chiuso correttamente") //stampa di debug
 	}()
 
 	// Crea un buffer in memoria per il CSV

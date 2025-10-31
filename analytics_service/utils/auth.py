@@ -5,7 +5,7 @@ from fastapi import HTTPException, Header
 SECRET_KEY = "supersegreta123"  
 ALGORITHM = "HS256"
 
-
+#estrai il valore di authorization dall'header Authorization della richiesta HTTP, se non c'è restituisci None
 def validate_token(authorization: str = Header(None)) -> dict:
     """
     Dependency per validare il token JWT direttamente dall'header Authorization.

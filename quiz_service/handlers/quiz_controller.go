@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"AP_project/quiz_service/logic" // [AGGIORNATO] importa la logica applicativa estratta
+	"AP_project/quiz_service/logic" // importa la logica applicativa
 	"AP_project/quiz_service/models"
-	"errors" // [AGGIORNATO] per usare errors.Is
+	"errors" // per usare errors.Is
 	"io"
 	"net/http"
 	"strings"
@@ -41,9 +41,9 @@ func CreateQuiz(c *gin.Context) {
 		}
 	}
 
-	isStudent := deriveIsStudent(c) // [AGGIUNTO] deriva ruolo
+	isStudent := deriveIsStudent(c) //  deriva ruolo
 
-	quiz, err := logic.CreateQuiz(input, isStudent) // [AGGIORNATO] passa il ruolo allo strato di logica
+	quiz, err := logic.CreateQuiz(input, isStudent) // passa il ruolo allo strato di logica
 	if err != nil {
 		c.JSON(mapErrorToStatus(err), gin.H{"error": err.Error()})
 		return
@@ -87,7 +87,6 @@ func GenerateExams(c *gin.Context) {
 		return
 	}
 
-	// [AGGIUNTO] Validazioni di input spostate qui dal service
 	if req.N <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "n deve essere > 0"})
 		return
@@ -117,13 +116,6 @@ func GenerateExams(c *gin.Context) {
 	// // Così il client inizia a ricevere lo ZIP mentre viene creato, senza aspettare la fine.
 	_, _ = io.Copy(c.Writer, pr)
 
-	// c.Header("Content-Type", "application/zip")
-	// c.Status(http.StatusOK)
-
-	// if err := logic.GenerateExamZIP(req.Questions, req.N, c.Writer); err != nil {
-	// 	c.Status(http.StatusInternalServerError)
-	// 	return
-	// }
 }
 
 // -------------------- helpers controller --------------------

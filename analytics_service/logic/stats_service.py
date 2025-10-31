@@ -5,7 +5,7 @@ from models.ORM_models import Quiz, QuizQuesito, Quesito, CategoriaQuesito, Cate
 import pandas as pd
 import math
 
-# [AGGIUNTO] Eccezioni di dominio che il controller mapperà in HTTP status
+# Eccezioni di dominio che il controller mapperà in HTTP status
 class BadRequestError(Exception):
     pass
 

@@ -11,6 +11,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     # Faccio una copia del dizionario per evitare di modificarlo direttamente
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    # L’operatore or in Python non restituisce sempre un booleano, ma:
+    # restituisce il primo valore “truthy” trovato,
+    # oppure l’ultimo valore se entrambi sono “falsy”.
     
     # Aggiunge al token il campo "exp" richiesto da JWT (expiration time)
     to_encode.update({"exp": expire})

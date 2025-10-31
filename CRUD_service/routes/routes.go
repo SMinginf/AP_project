@@ -16,6 +16,7 @@ func SetupRoutes(r *gin.Engine) {
 	CategoriesRouter.Use(utils.AuthMiddleware())
 	QuestionsRoutes.Use(utils.AuthMiddleware())
 
+	// Route per le categorie
 	CategoriesRouter.GET("/pubbliche", handlers.GetCategoriePubbliche)
 	CategoriesRouter.GET("/pubbliche/docente/:id_docente", handlers.GetCategoriePubblicheByDocente)
 	CategoriesRouter.GET("/studente/:id_studente", handlers.GetCategorieByStudente)
@@ -24,6 +25,8 @@ func SetupRoutes(r *gin.Engine) {
 	CategoriesRouter.DELETE("/delete", handlers.DeleteCategorie)
 	CategoriesRouter.GET("/docente/:id_docente", handlers.GetCategorieByDocente)
 
+	// Route per gli utenti
+	UserRouter.PUT("/update", handlers.UpdateUtente)
 	UserRouter.GET("/:id_utente", handlers.GetUtente)
 
 	// Route per i quesiti

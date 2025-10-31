@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"AP_project/CRUD_service/logic" // [AGGIUNTO] delega alla logica applicativa
+	"AP_project/CRUD_service/logic" // delega alla logica applicativa
 	"AP_project/CRUD_service/models"
-	"errors" // [AGGIUNTO] per errors.Is
+	"errors" // per errors.Is
 	"fmt"
 	"net/http"
 
@@ -15,7 +15,7 @@ import (
 // Restituisco tutte le categorie pubbliche presenti nel database, popolando anche il campo Docente
 // che contiene le informazioni del docente associato a ciascuna categoria grazie al metodo Preload di GORM.
 func GetCategoriePubbliche(c *gin.Context) {
-	categorie, err := logic.GetCategoriePubbliche() // [AGGIUNTO]
+	categorie, err := logic.GetCategoriePubbliche()
 	if err != nil {
 		// Stampa errore anche su console
 		fmt.Println("Errore nel recupero delle categorie:", err.Error())
@@ -32,7 +32,7 @@ func GetCategoriePubblicheByDocente(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID del docente mancante"})
 		return
 	}
-	categorie, err := logic.GetCategoriePubblicheByDocente(idDocente) // [AGGIUNTO]
+	categorie, err := logic.GetCategoriePubblicheByDocente(idDocente)
 	if err != nil {
 		c.JSON(mapErrorToStatus(err), gin.H{"error": "Errore nel recupero delle categorie pubbliche per il docente"})
 		return
@@ -51,7 +51,7 @@ func CreateCategoria(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	created, err := logic.CreateCategoria(categoria) // [AGGIUNTO]
+	created, err := logic.CreateCategoria(categoria)
 	if err != nil {
 		c.JSON(mapErrorToStatus(err), gin.H{"error": err.Error()})
 		return
@@ -78,7 +78,7 @@ func UpdateCategoria(c *gin.Context) {
 		return
 	}
 
-	if err := logic.UpdateCategoria(categoria); err != nil { // [AGGIUNTO]
+	if err := logic.UpdateCategoria(categoria); err != nil {
 		c.JSON(mapErrorToStatus(err), gin.H{"error": "Errore nella modifica della categoria"})
 		return
 	}
@@ -99,7 +99,7 @@ func DeleteCategorie(c *gin.Context) {
 		return
 	}
 
-	if err := logic.DeleteCategorie(ids); err != nil { // [AGGIUNTO]
+	if err := logic.DeleteCategorie(ids); err != nil {
 		c.JSON(mapErrorToStatus(err), gin.H{"error": "Errore nella cancellazione delle categorie"})
 		return
 	}
@@ -113,7 +113,7 @@ func GetCategorieByDocente(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID del docente mancante"})
 		return
 	}
-	categorie, err := logic.GetCategorieByDocente(idDocente) // [AGGIUNTO]
+	categorie, err := logic.GetCategorieByDocente(idDocente)
 	if err != nil {
 		c.JSON(mapErrorToStatus(err), gin.H{"error": "Errore nel recupero delle categorie per il docente"})
 		return
@@ -128,7 +128,7 @@ func GetCategorieByStudente(c *gin.Context) {
 		return
 	}
 
-	categorie, err := logic.GetCategorieByStudente(idStudente) // [AGGIUNTO]
+	categorie, err := logic.GetCategorieByStudente(idStudente)
 	if err != nil {
 		c.JSON(mapErrorToStatus(err), gin.H{"error": "Errore nel recupero delle categorie per lo studente"})
 		return
@@ -152,7 +152,7 @@ func CreateQuesito(c *gin.Context) {
 		return
 	}
 
-	created, err := logic.CreateQuesito(quesito) // [AGGIUNTO]
+	created, err := logic.CreateQuesito(quesito)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore nella creazione del quesito"})
 		return
@@ -178,7 +178,7 @@ func UpdateQuesito(c *gin.Context) {
 		return
 	}
 
-	if err := logic.UpdateQuesito(quesito); err != nil { // [AGGIUNTO]
+	if err := logic.UpdateQuesito(quesito); err != nil {
 		c.JSON(mapErrorToStatus(err), gin.H{"error": "Errore nella modifica del quesito"})
 		return
 	}
@@ -256,18 +256,20 @@ func GetUtente(c *gin.Context) {
 
 func UpdateUtente(c *gin.Context) {
 
+	id, exists := c.Get("user_id") // -> id è di tipo interface{}
+	if !exists {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Id utente non trovato nel token"})
+		return
+	}
+
 	var utente models.Utente
 	if err := c.ShouldBindJSON(&utente); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if utente.ID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID dell'utente mancante"})
-		return
-	}
-
-	if err := logic.UpdateUtente(utente); err != nil { // [AGGIUNTO]
+	// sono sicuro del tipo di id quindi faccio type assertion diretta
+	if err := logic.UpdateUtente(id.(float64), utente); err != nil { // [AGGIUNTO]
 		c.JSON(mapErrorToStatus(err), gin.H{"error": "Errore nella modifica dell'utente"})
 		return
 	}

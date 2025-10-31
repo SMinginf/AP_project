@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from database.connect import get_db
 from utils.auth import validate_token
-from logic import stats_service  # [AGGIUNTO] delega alla logica applicativa
+from logic import stats_service  # delega alla logica applicativa
 
 # Una dependency globale in FastAPI è una funzione o un oggetto che viene 
 # eseguito automaticamente per tutte le rotte di un router o dell'intera 
@@ -33,7 +33,7 @@ def get_student_general_stats(student_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except stats_service.BadRequestError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:  # [AGGIUNTO] fallback errore generico
+    except Exception as e:  # fallback errore generico
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
@@ -58,7 +58,7 @@ def get_student_stats_per_categorie(student_id: int, categoria_ids: str, db: Ses
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except stats_service.BadRequestError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:  # [AGGIUNTO]
+    except Exception as e:  
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
